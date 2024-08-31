@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC "-//Checkstyle//DTD SuppressionFilter Configuration 1.0//EN"
+    "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+<suppressions>
+  <!-- https://checkstyle.org/filters/suppressionfilter.html -->
+  <suppress files=".*" checks="AbbreviationAsWordInName"/>
+  <suppress files=".*" checks="AvoidEscapedUnicodeCharacters"/>
+  <suppress files=".*" checks="LineLength"/>
+  <suppress files=".*" checks="MissingSwitchDefault"/>
+  <suppress files=".*" checks="PatternVariableName"/>
+</suppressions>

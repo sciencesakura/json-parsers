@@ -1,0 +1,21 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+plugins {
+  id 'buildlogic.groovy-application-conventions'
+}
+
+dependencies {
+  implementation project(':gjsonp-core')
+  implementation libs.groovy.nio
+  implementation libs.picocli
+}
+
+application {
+  mainClass = 'com.sciencesakura.gjsonp.App'
+}
+
+tasks.named('shadowJar', ShadowJar) {
+  archiveBaseName.set('gjsonp')
+  archiveClassifier.set('')
+  archiveVersion.set('')
+}

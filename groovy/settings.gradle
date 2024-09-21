@@ -1,0 +1,5 @@
+rootProject.name = 'gjsonp'
+include('core', 'cli')
+
+project(':core').name = 'gjsonp-core'
+project(':cli').name = 'gjsonp-cli'

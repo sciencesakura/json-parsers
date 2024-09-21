@@ -1,0 +1,39 @@
+plugins {
+  id 'groovy'
+  id 'codenarc'
+}
+
+group = 'com.sciencesakura'
+version = '1.0.0'
+description = 'A toy JSON parser written in Groovy'
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  implementation libs.groovy
+  testImplementation libs.spock.core
+  codenarc libs.codenarc
+}
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(21)
+  }
+}
+
+jar {
+  manifest {
+    attributes(
+        'Implementation-Title': project.name,
+        'Implementation-Vendor': project.group.split('\\.').reverse().join('.'),
+        'Implementation-Version': project.version,
+        'Automatic-Module-Name': "${project.group}.${project.name}".replace('-', '.'),
+    )
+  }
+}
+
+test {
+  useJUnitPlatform()
+}

@@ -6,7 +6,7 @@ import spock.lang.Specification
 
 class EvaluatorSpec extends Specification {
 
-  def 'from array'() {
+  def 'get element from array'() {
     given:
     def json = ['foo', 'bar', 'baz']
     def instructions = [
@@ -20,7 +20,7 @@ class EvaluatorSpec extends Specification {
     assert actual == 'bar'
   }
 
-  def 'from nested array'() {
+  def 'get element from nested array'() {
     given:
     def json = [['foo', 'bar'], ['baz', 'qux']]
     def instructions = [
@@ -35,7 +35,7 @@ class EvaluatorSpec extends Specification {
     assert actual == 'baz'
   }
 
-  def 'from object'() {
+  def 'get property from object'() {
     given:
     def json = [foo: 1, bar: 2, baz: 3]
     def instructions = [
@@ -49,7 +49,7 @@ class EvaluatorSpec extends Specification {
     assert actual == 2
   }
 
-  def 'from nestd object'() {
+  def 'get property from nested object'() {
     given:
     def json = [foo: [bar: 1], baz: [qux: 2]]
     def instructions = [

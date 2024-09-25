@@ -8,7 +8,22 @@ import spock.lang.Specification
 
 class LexerSpec extends Specification {
 
-  def 'ignore blanks'() {
+  def'do nothing when there is no input'() {
+    given:
+    def text = ''
+    def channel = channelFrom text
+
+    when:
+    def tokens = Lexer.newLexer(channel, 128).toList()
+
+    then:
+    assert tokens.empty
+
+    cleanup:
+    channel?.close()
+  }
+
+  def 'ignore whitespace characters'() {
     given:
     def text = ' \t\n\r'
     def channel = channelFrom text
@@ -45,7 +60,7 @@ class LexerSpec extends Specification {
     channel?.close()
   }
 
-  def 'throw exception for unknown symbols'() {
+  def 'throw exception for unknown symbol'() {
     given:
     def text = ',:[]()'
     def channel = channelFrom text
@@ -86,7 +101,7 @@ class LexerSpec extends Specification {
     channel?.close()
   }
 
-  def 'recognize escaped sequences'() {
+  def 'recognize escape sequences'() {
     given:
     def text = '"\\"" "\\\\" "\\/" "\\b" "\\f" "\\n" "\\r" "\\t"'
     def channel = channelFrom text
@@ -139,9 +154,9 @@ class LexerSpec extends Specification {
     channel?.close()
   }
 
-  def 'throw exception when string is not closed'() {
+  def "throw exception for unterminated string: '\"foo'"() {
     given:
-    def text = '"Hello'
+    def text = '"foo'
     def channel = channelFrom text
 
     when:
@@ -151,13 +166,31 @@ class LexerSpec extends Specification {
     def e = thrown(ParserException)
     assert e.type == ParserException.Type.UNEXPECTED_EOF
     assert e.line == 1
-    assert e.column == 7
+    assert e.column == 5
 
     cleanup:
     channel?.close()
   }
 
-  def 'throw exception when string contains invalid escape sequence'() {
+  def "throw exception for unterminated string: '\"'"() {
+    given:
+    def text = '"'
+    def channel = channelFrom text
+
+    when:
+    Lexer.newLexer(channel, 128).toList()
+
+    then:
+    def e = thrown(ParserException)
+    assert e.type == ParserException.Type.UNEXPECTED_EOF
+    assert e.line == 1
+    assert e.column == 2
+
+    cleanup:
+    channel?.close()
+  }
+
+  def 'throw exception for string containing invalid escape sequence'() {
     given:
     def text = '"\\x"'
     def channel = channelFrom text
@@ -175,9 +208,9 @@ class LexerSpec extends Specification {
     channel?.close()
   }
 
-  def 'throw exception when string contains invalid unicode sequence'() {
+  def "throw exception for string containing invalid unicode sequence: '\"\\u000G\"'"() {
     given:
-    def text = '"\\u123G"'
+    def text = '"\\u000G"'
     def channel = channelFrom text
 
     when:
@@ -193,7 +226,25 @@ class LexerSpec extends Specification {
     channel?.close()
   }
 
-  def 'throw exception when string contains control character'() {
+  def "throw exception for string containing invalid unicode sequence: '\"\\u004\"'"() {
+    given:
+    def text = '"\\u004"'
+    def channel = channelFrom text
+
+    when:
+    Lexer.newLexer(channel, 128).toList()
+
+    then:
+    def e = thrown(ParserException)
+    assert e.type == ParserException.Type.UNEXPECTED_CHARACTER
+    assert e.line == 1
+    assert e.column == 7
+
+    cleanup:
+    channel?.close()
+  }
+
+  def 'throw exception for string containing control character'() {
     given:
     def text = '"Hello\tWorld"'
     def channel = channelFrom text
@@ -230,7 +281,7 @@ class LexerSpec extends Specification {
     channel?.close()
   }
 
-  def 'throw exception for unknown keywords'() {
+  def 'throw exception for unknown keyword'() {
     given:
     def text = 'true false nil'
     def channel = channelFrom text

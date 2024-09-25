@@ -36,4 +36,8 @@ jar {
 
 test {
   useJUnitPlatform()
+  reports {
+    html.required.set(false)
+    junitXml.required.set(false)
+  }
 }

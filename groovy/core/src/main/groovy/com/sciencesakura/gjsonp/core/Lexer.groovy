@@ -10,6 +10,8 @@ import java.nio.charset.StandardCharsets
 @PackageScope
 class Lexer implements Iterator<Token> {
 
+  private static final REPLACEMENT_CHAR = '�'
+
   private final channel
 
   private final buffer
@@ -48,9 +50,9 @@ class Lexer implements Iterator<Token> {
         case ']' -> new Token.RightBracket(line, column)
         case '{' -> new Token.LeftCurly(line, column)
         case '}' -> new Token.RightCurly(line, column)
-        case '"' -> recognizeString()
-        case '-', Characters::isDigit -> recognizeNumber(c)
-        case Characters::isAlpha -> recognizeKeyword(c)
+        case '"' -> nextString()
+        case '-', Characters::isDigit -> nextNumber(c)
+        case Characters::isAlpha -> nextKeyword(c)
         default -> throw ParserException.unexpectedCharacter(c, line, column)
       }
     }
@@ -65,7 +67,7 @@ class Lexer implements Iterator<Token> {
     current
   }
 
-  private recognizeString() {
+  private nextString() {
     def startColumn = column
     def str = new StringBuilder()
     def escaped = false
@@ -106,7 +108,7 @@ class Lexer implements Iterator<Token> {
     Integer.parseInt(str.toString(), 16)
   }
 
-  private recognizeKeyword(c1) {
+  private nextKeyword(c1) {
     def startColumn = column
     def c = c1
     def str = new StringBuilder(5)
@@ -114,16 +116,15 @@ class Lexer implements Iterator<Token> {
       str << c
     } while (Characters.isAlpha(c = nextChar()))
     backChar(c)
-    def value = str.toString()
-    switch (value) {
+    switch (str.toString()) {
       case 'true' -> new Token.Bool(line, startColumn, true)
       case 'false' -> new Token.Bool(line, startColumn, false)
       case 'null' -> new Token.Null(line, startColumn)
-      default -> throw ParserException.unknownToken(value, line, startColumn)
+      default -> throw ParserException.unknownToken(str, line, startColumn)
     }
   }
 
-  private recognizeNumber(c1) {
+  private nextNumber(c1) {
     def startColumn = column
     def c = c1
     def str = new StringBuilder()
@@ -193,24 +194,24 @@ class Lexer implements Iterator<Token> {
       return b1 as char
     }
     def b2 = readByte()
-    if ((b2 & 0xC0) != 0x80) return Characters.REPLACEMENT_CHAR
+    if ((b2 & 0xC0) != 0x80) return REPLACEMENT_CHAR
     if ((b1 & 0xE0) == 0xC0) {
       // U+0080 to U+07FF
       return new String([b1, b2] as byte[], StandardCharsets.UTF_8)
     }
     def b3 = readByte()
-    if ((b3 & 0xC0) != 0x80) return Characters.REPLACEMENT_CHAR
+    if ((b3 & 0xC0) != 0x80) return REPLACEMENT_CHAR
     if ((b1 & 0xF0) == 0xE0) {
       // U+0800 to U+FFFF
       return new String([b1, b2, b3] as byte[], StandardCharsets.UTF_8)
     }
     def b4 = readByte()
-    if ((b4 & 0xC0) != 0x80) return Characters.REPLACEMENT_CHAR
+    if ((b4 & 0xC0) != 0x80) return REPLACEMENT_CHAR
     if ((b1 & 0xF8) == 0xF0) {
       // U+10000 to U+10FFFF
       return new String([b1, b2, b3, b4] as byte[], StandardCharsets.UTF_8)
     }
-    Characters.REPLACEMENT_CHAR
+    REPLACEMENT_CHAR
   }
 
   private readByte() {

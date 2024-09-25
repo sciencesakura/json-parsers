@@ -44,6 +44,6 @@ class App implements Runnable {
     def value = new Parser(expression).with {
       new Evaluator(it).eval(json)
     }
-    println Formatter.format(value)
+    new Formatter(System.out).format(value)
   }
 }

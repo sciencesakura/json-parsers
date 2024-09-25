@@ -18,7 +18,7 @@ class Parser implements Iterator<Instruction> {
   @Override
   boolean hasNext() {
     if (!current && tokens.hasNext()) {
-      current = parseInstruction(tokens.next())
+      current = nextInstruction(tokens.next())
     }
     current != null
   }
@@ -31,25 +31,25 @@ class Parser implements Iterator<Instruction> {
     current
   }
 
-  private parseInstruction(t) {
+  private nextInstruction(t) {
     switch (t) {
-      case Token.Period -> parseGetElementByPeriod()
-      case Token.LeftBracket -> parseGetElementByBracket()
+      case Token.Period -> nextGetElementByPeriod()
+      case Token.LeftBracket -> nextGetElementByBracket()
       default -> throw InvalidExpressionException.unexpectedToken(t)
     }
   }
 
   // .xxx
-  private parseGetElementByPeriod() {
+  private nextGetElementByPeriod() {
     def t = tokens.next()
-    switch (t) {
-      case Token.String -> new Instruction.GetElement(t.value())
-      default -> throw InvalidExpressionException.unexpectedToken(t)
+    if (t instanceof Token.String) {
+      return new Instruction.GetElement(t.value())
     }
+    throw InvalidExpressionException.unexpectedToken(t)
   }
 
   // [xxx]
-  private parseGetElementByBracket() {
+  private nextGetElementByBracket() {
     def t = tokens.next()
     if (t instanceof Token.Integer || t instanceof Token.String) {
       def value = t.value()

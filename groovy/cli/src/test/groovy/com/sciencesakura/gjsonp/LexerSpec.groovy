@@ -6,7 +6,7 @@ import spock.lang.Specification
 
 class LexerSpec extends Specification {
 
-  def 'ignore blanks and control characters'() {
+  def 'ignore whitespace characters and control characters'() {
     given:
     def text = ' \t\n\r\u0000'
 
@@ -104,9 +104,20 @@ class LexerSpec extends Specification {
     ]
   }
 
-  def 'throw exception when string is not closed'() {
+  def "throw exception for unterminated string: '\"foo'"() {
     given:
     def text = '"foo'
+
+    when:
+    new Lexer(text).toList()
+
+    then:
+    thrown(InvalidExpressionException)
+  }
+
+  def "throw exception for unterminated string: '\"'"() {
+    given:
+    def text = '"'
 
     when:
     new Lexer(text).toList()

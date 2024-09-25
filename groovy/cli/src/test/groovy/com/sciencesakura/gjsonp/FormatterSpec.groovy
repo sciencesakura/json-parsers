@@ -8,39 +8,43 @@ class FormatterSpec extends Specification {
 
   def 'format true'() {
     given:
+    def dest = new StringBuilder()
     def json = true
 
     when:
-    def actual = Formatter.format(json)
+    new Formatter(dest).format(json)
 
     then:
-    assert actual == 'true'
+    assert dest.toString() == 'true'
   }
 
   def 'format false'() {
     given:
+    def dest = new StringBuilder()
     def json = false
 
     when:
-    def actual = Formatter.format(json)
+    new Formatter(dest).format(json)
 
     then:
-    assert actual == 'false'
+    assert dest.toString() == 'false'
   }
 
   def 'format null'() {
     given:
+    def dest = new StringBuilder()
     def json = null
 
     when:
-    def actual = Formatter.format(json)
+    new Formatter(dest).format(json)
 
     then:
-    assert actual == 'null'
+    assert dest.toString() == 'null'
   }
 
   def 'format string'() {
     given:
+    def dest = new StringBuilder()
     def json = '''\
         Hello
         Olá
@@ -50,25 +54,27 @@ class FormatterSpec extends Specification {
         👋👋🏻👋🏼👋🏽👋🏾👋🏿'''.stripIndent()
 
     when:
-    def actual = Formatter.format(json)
+    new Formatter(dest).format(json)
 
     then:
-    assert actual == '"Hello\\nOlá\\nこんにちは\\n你好\\n안녕하세요\\n👋👋🏻👋🏼👋🏽👋🏾👋🏿"'
+    assert dest.toString() == '"Hello\\nOlá\\nこんにちは\\n你好\\n안녕하세요\\n👋👋🏻👋🏼👋🏽👋🏾👋🏿"'
   }
 
   def 'format number'() {
     given:
+    def dest = new StringBuilder()
     def json = 42
 
     when:
-    def actual = Formatter.format(json)
+    new Formatter(dest).format(json)
 
     then:
-    assert actual == '42'
+    assert dest.toString() == '42'
   }
 
   def 'format array'() {
     given:
+    def dest = new StringBuilder()
     def json = [
         1, 2, 3,
         [], [4], [5, 6, 7],
@@ -76,10 +82,10 @@ class FormatterSpec extends Specification {
     ]
 
     when:
-    def actual = Formatter.format(json)
+    new Formatter(dest).format(json)
 
     then:
-    assert actual == '''\
+    assert dest.toString() == '''\
         [
           1,
           2,
@@ -105,6 +111,7 @@ class FormatterSpec extends Specification {
 
   def 'format object'() {
     given:
+    def dest = new StringBuilder()
     def json = [
         a: 1,
         b: 2,
@@ -117,10 +124,10 @@ class FormatterSpec extends Specification {
     ]
 
     when:
-    def actual = Formatter.format(json)
+    new Formatter(dest).format(json)
 
     then:
-    assert actual == '''\
+    assert dest.toString() == '''\
         {
           "a": 1,
           "b": 2,

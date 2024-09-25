@@ -112,9 +112,8 @@ class ParserSpec extends Specification {
     assert actual == ['Hello', 42]
   }
 
-  def 'throw exception when array ends unexpectedly 1'() {
+  def "throw exception for unclosed array: '['"() {
     given:
-    // [
     def tokens = [new Token.LeftBracket(0, 0)]
     def parser = new Parser(tokens.iterator())
 
@@ -126,7 +125,7 @@ class ParserSpec extends Specification {
     assert e.type == ParserException.Type.UNEXPECTED_EOF
   }
 
-  def 'throw exception when array ends unexpectedly 2'() {
+  def "throw exception for unclosed array: '[42'"() {
     given:
     // [42
     def tokens = [new Token.LeftBracket(0, 0), new Token.Number(0, 0, 42)]
@@ -140,9 +139,8 @@ class ParserSpec extends Specification {
     assert e.type == ParserException.Type.UNEXPECTED_EOF
   }
 
-  def 'throw exception when array ends unexpectedly 3'() {
+  def "throw exception for unclosed array: '[42,'"() {
     given:
-    // [42,
     def tokens = [
         new Token.LeftBracket(0, 0),
         new Token.Number(0, 0, 42),
@@ -158,9 +156,8 @@ class ParserSpec extends Specification {
     assert e.type == ParserException.Type.UNEXPECTED_EOF
   }
 
-  def 'throw exception when unexpected token is found in array 1'() {
+  def "throw exception for invalid sequence of tokens: '[,]'"() {
     given:
-    // [,]
     def tokens = [
         new Token.LeftBracket(0, 0),
         new Token.Comma(0, 0),
@@ -176,7 +173,7 @@ class ParserSpec extends Specification {
     assert e.type == ParserException.Type.UNEXPECTED_TOKEN
   }
 
-  def 'throw exception when unexpected token is found in array 2'() {
+  def "throw exception for invalid sequence of tokens: '[42,,]'"() {
     given:
     // [42,,]
     def tokens = [
@@ -196,7 +193,7 @@ class ParserSpec extends Specification {
     assert e.type == ParserException.Type.UNEXPECTED_TOKEN
   }
 
-  def 'throw exception when unexpected token is found in array 3'() {
+  def "throw exception for invalid sequence of tokens: '[42 42]'"() {
     given:
     // [42 42]
     def tokens = [
@@ -267,9 +264,8 @@ class ParserSpec extends Specification {
     assert actual == [foo: 'Hello', bar: 42]
   }
 
-  def 'throw exception when object ends unexpectedly 1'() {
+  def "throw exception for unclosed object: '{'"() {
     given:
-    // {
     def tokens = [new Token.LeftCurly(0, 0)]
     def parser = new Parser(tokens.iterator())
 
@@ -281,9 +277,8 @@ class ParserSpec extends Specification {
     assert e.type == ParserException.Type.UNEXPECTED_EOF
   }
 
-  def 'throw exception when object ends unexpectedly 2'() {
+  def "throw exception for unclosed object: '{\"foo\"'"() {
     given:
-    // {"foo"
     def tokens = [new Token.LeftCurly(0, 0), new Token.String(0, 0, 'foo')]
     def parser = new Parser(tokens.iterator())
 
@@ -295,9 +290,8 @@ class ParserSpec extends Specification {
     assert e.type == ParserException.Type.UNEXPECTED_EOF
   }
 
-  def 'throw exception when object ends unexpectedly 3'() {
+  def "throw exception for unclosed object: '{\"foo\":'"() {
     given:
-    // {"foo":
     def tokens = [
         new Token.LeftCurly(0, 0),
         new Token.String(0, 0, 'foo'),
@@ -313,9 +307,8 @@ class ParserSpec extends Specification {
     assert e.type == ParserException.Type.UNEXPECTED_EOF
   }
 
-  def 'throw exception when object ends unexpectedly 4'() {
+  def "throw exception for unclosed object: '{\"foo\": 42'"() {
     given:
-    // {"foo": 42
     def tokens = [
         new Token.LeftCurly(0, 0),
         new Token.String(0, 0, 'foo'),
@@ -332,7 +325,7 @@ class ParserSpec extends Specification {
     assert e.type == ParserException.Type.UNEXPECTED_EOF
   }
 
-  def 'throw exception when object ends unexpectedly 5'() {
+  def "throw exception for unclosed object: '{\"foo\": 42,'"() {
     given:
     // {"foo": 42,
     def tokens = [
@@ -352,9 +345,8 @@ class ParserSpec extends Specification {
     assert e.type == ParserException.Type.UNEXPECTED_EOF
   }
 
-  def 'throw exception when unexpected token is found in object 1'() {
+  def "throw exception for invalid sequence of tokens: '{42}'"() {
     given:
-    // {42}
     def tokens = [
         new Token.LeftCurly(0, 0),
         new Token.Number(0, 0, 42),
@@ -370,7 +362,7 @@ class ParserSpec extends Specification {
     assert e.type == ParserException.Type.UNEXPECTED_TOKEN
   }
 
-  def 'throw exception when unexpected token is found in object 2'() {
+  def "throw exception for invalid sequence of tokens: '{\"foo\" 42}'"() {
     given:
     // {"foo" 42}
     def tokens = [
@@ -389,9 +381,8 @@ class ParserSpec extends Specification {
     assert e.type == ParserException.Type.UNEXPECTED_TOKEN
   }
 
-  def 'throw exception when unexpected token is found in object 3'() {
+  def "throw exception for invalid sequence of tokens: '{\"foo\":}'"() {
     given:
-    // {"foo":}
     def tokens = [
         new Token.LeftCurly(0, 0),
         new Token.String(0, 0, 'foo'),
@@ -408,9 +399,8 @@ class ParserSpec extends Specification {
     assert e.type == ParserException.Type.UNEXPECTED_TOKEN
   }
 
-  def 'throw exception when unexpected token is found in object 4'() {
+  def "throw exception for invalid sequence of tokens: '{\"foo\": 42 \"bar\"}'"() {
     given:
-    // {"foo": 42 "bar"}
     def tokens = [
         new Token.LeftCurly(0, 0),
         new Token.String(0, 0, 'foo'),
@@ -429,9 +419,8 @@ class ParserSpec extends Specification {
     assert e.type == ParserException.Type.UNEXPECTED_TOKEN
   }
 
-  def 'throw exception when unexpected token is found in object 5'() {
+  def "throw exception for invalid sequence of tokens: '{\"foo\": 42,}'"() {
     given:
-    // {"foo": 42,}
     def tokens = [
         new Token.LeftCurly(0, 0),
         new Token.String(0, 0, 'foo'),

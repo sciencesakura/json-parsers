@@ -17,9 +17,10 @@ class Evaluator {
     def current = json
     while (instructions.hasNext()) {
       def i = instructions.next()
-      current = switch (i) {
-        case Instruction.GetElement -> current[i.index()]
-        default -> throw new IllegalStateException("Unknown instruction: $i")
+      if (i instanceof Instruction.GetElement) {
+        current = current[i.index()]
+      } else {
+        throw new IllegalStateException("Unknown instruction: $i")
       }
     }
     current

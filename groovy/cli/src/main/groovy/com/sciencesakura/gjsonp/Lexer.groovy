@@ -2,6 +2,7 @@
 
 package com.sciencesakura.gjsonp
 
+import com.sciencesakura.gjsonp.core.Characters
 import groovy.transform.PackageScope
 
 @PackageScope
@@ -25,15 +26,15 @@ class Lexer implements Iterator<Token> {
       def c
       do {
         c = nextChar()
-      } while (Character.isWhitespace(c) || Character.isISOControl(c))
+      } while (Characters.isWhitespace(c) || Characters.isControl(c))
       if (c == -1) return false
       current = switch (c) {
         case '.' -> new Token.Period(pos)
         case '[' -> new Token.LeftBracket(pos)
         case ']' -> new Token.RightBracket(pos)
-        case '"' -> recognizeQuotedString()
-        case Character::isDigit -> recognizeInteger(c)
-        default -> recognizeString(c)
+        case '"' -> nextQuotedString()
+        case Characters::isDigit -> nextInteger(c)
+        default -> nextString(c)
       }
     }
     true
@@ -47,35 +48,37 @@ class Lexer implements Iterator<Token> {
     current
   }
 
-  private recognizeInteger(c1) {
+  private nextInteger(c1) {
     def startPos = pos
     def c = c1
     def str = new StringBuilder()
     do {
       str << c
-    } while (Character.isDigit(c = nextChar()))
+    } while (Characters.isDigit(c = nextChar()))
     backChar(c)
     new Token.Integer(startPos, str as int)
   }
 
-  private recognizeString(c1) {
+  private nextString(c1) {
     def startPos = pos
     def c = c1
     def str = new StringBuilder()
     do {
-      if (!Character.isISOControl(c)) str << c
-    } while ((c = nextChar()) != -1 && c != '.' && c != '[' && c != ']' && !Character.isWhitespace(c))
+      if (!Characters.isControl(c)) {
+        str << c
+      }
+    } while ((c = nextChar()) != -1 && c != '.' && c != '[' && c != ']' && !Characters.isWhitespace(c))
     backChar(c)
     new Token.String(startPos, str.toString())
   }
 
-  private recognizeQuotedString() {
+  private nextQuotedString() {
     def startPos = pos
     def str = new StringBuilder()
     def escaped = false
     def c
     while ((c = nextChar()) != -1) {
-      if (Character.isISOControl(c)) continue
+      if (Characters.isControl(c)) continue
       if (escaped) {
         escaped = false
         switch (c) {

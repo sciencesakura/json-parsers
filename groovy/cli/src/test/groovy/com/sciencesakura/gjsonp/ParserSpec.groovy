@@ -101,7 +101,7 @@ class ParserSpec extends Specification {
     ]
   }
 
-  def "throw exception for invalid expression 'foo'"() {
+  def "throw exception for invalid expression: 'foo'"() {
     given:
     def expression = 'foo'
 
@@ -112,7 +112,7 @@ class ParserSpec extends Specification {
     thrown(InvalidExpressionException)
   }
 
-  def "throw exception for invalid expression '.[1]'"() {
+  def "throw exception for invalid expression: '.[1]'"() {
     given:
     def expression = '.[1]'
 
@@ -123,7 +123,7 @@ class ParserSpec extends Specification {
     thrown(InvalidExpressionException)
   }
 
-  def "throw exception for invalid expression '[.]'"() {
+  def "throw exception for invalid expression: '[.]'"() {
     given:
     def expression = '[.]'
 
@@ -134,7 +134,7 @@ class ParserSpec extends Specification {
     thrown(InvalidExpressionException)
   }
 
-  def "throw exception for invalid expression '[foo.bar]'"() {
+  def "throw exception for invalid expression: '[foo.bar]'"() {
     given:
     def expression = '[foo.bar]'
 
@@ -145,7 +145,7 @@ class ParserSpec extends Specification {
     thrown(InvalidExpressionException)
   }
 
-  def "throw exception for invalid expression '.'"() {
+  def "throw exception for invalid expression: '.'"() {
     given:
     def expression = '.'
 

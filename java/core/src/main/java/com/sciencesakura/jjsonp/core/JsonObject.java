@@ -2,28 +2,36 @@
 
 package com.sciencesakura.jjsonp.core;
 
+import static java.util.stream.Collectors.joining;
+
 import java.io.Serial;
 import java.util.Collections;
-import java.util.Map;
+import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.SequencedMap;
 import java.util.function.BiConsumer;
 import org.jspecify.annotations.NonNull;
 
 /**
  * Represents a JSON object.
  */
-public final class JsonObject implements JsonContainer<Map<String, JsonValue<?>>> {
+public final class JsonObject implements JsonValue {
+
+  /** An empty JSON object. */
+  public static final JsonObject EMPTY = new JsonObject(Collections.emptySortedMap());
 
   @Serial
-  private static final long serialVersionUID = 1;
+  private static final long serialVersionUID = 1L;
 
-  public static final JsonObject EMPTY = new JsonObject(Collections.emptyMap());
+  private final SequencedMap<String, JsonValue> pairs;
 
-  private final Map<String, JsonValue<?>> members;
-
-  JsonObject(Map<String, JsonValue<?>> members) {
-    this.members = Collections.unmodifiableMap(members);
+  /**
+   * Constructs a JSON object with the specified name-value pairs.
+   *
+   * @param pairs the name-value pairs represented by this JSON object.
+   */
+  public JsonObject(@NonNull SequencedMap<String, ? extends JsonValue> pairs) {
+    this.pairs = Collections.unmodifiableSequencedMap(pairs);
   }
 
   /**
@@ -34,23 +42,40 @@ public final class JsonObject implements JsonContainer<Map<String, JsonValue<?>>
    * @throws NoSuchElementException if no such member exists.
    */
   @NonNull
-  public JsonValue<?> get(@NonNull String name) {
-    var value = members.get(name);
-    if (value == null) {
+  public JsonValue get(@NonNull String name) {
+    var v = pairs.get(name);
+    if (v == null) {
       throw new NoSuchElementException("No such member: " + name);
     }
-    return value;
+    return v;
   }
 
-  @Override
+  /**
+   * Returns {@code true} if this object contains no elements.
+   *
+   * @return {@code true} if this object contains no elements.
+   */
+  public boolean isEmpty() {
+    return pairs.isEmpty();
+  }
+
+  /**
+   * Returns the number of elements in this object.
+   *
+   * @return the number of elements in this object.
+   */
   public int size() {
-    return members.size();
+    return pairs.size();
   }
 
-  @Override
+  /**
+   * Returns all names of members in this object.
+   *
+   * @return all names of members in this object.
+   */
   @NonNull
-  public Map<String, JsonValue<?>> value() {
-    return members;
+  public List<String> names() {
+    return List.copyOf(pairs.keySet());
   }
 
   /**
@@ -58,58 +83,24 @@ public final class JsonObject implements JsonContainer<Map<String, JsonValue<?>>
    *
    * @param action the action to be performed for each member.
    */
-  public void forEach(@NonNull BiConsumer<? super String, ? super JsonValue<?>> action) {
-    members.forEach(action);
+  public void forEach(@NonNull BiConsumer<? super String, ? super JsonValue> action) {
+    pairs.forEach(action);
   }
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj instanceof JsonObject that) {
-      return members.equals(that.members);
-    }
-    return false;
+    return obj == this || (obj instanceof JsonObject o && pairs.equals(o.pairs));
   }
 
   @Override
   public int hashCode() {
-    return members.hashCode();
-  }
-
-  @Override
-  public String toString() {
-    if (isEmpty()) {
-      return "{}";
-    }
-    var s = new StringBuilder().append('{');
-    forEach((n, v) -> s.append(Strings.toJson(n)).append(':').append(v).append(','));
-    return s.deleteCharAt(s.length() - 1).append('}').toString();
+    return pairs.hashCode();
   }
 
   @Override
   @NonNull
-  public String toPrettyString() {
-    return toPrettyString(0);
-  }
-
-  String toPrettyString(int level) {
-    if (isEmpty()) {
-      return "{}";
-    }
-    var nextLevel = level + 1;
-    var nextIndent = Strings.INDENT.repeat(nextLevel);
-    var s = new StringBuilder().append('{');
-    forEach((n, v) -> {
-      s.append('\n').append(nextIndent).append(Strings.toJson(n)).append(": ");
-      switch (v) {
-        case JsonArray a -> s.append(a.toPrettyString(nextLevel));
-        case JsonObject o -> s.append(o.toPrettyString(nextLevel));
-        default -> s.append(v.toPrettyString());
-      }
-      s.append(',');
-    });
-    return s.deleteCharAt(s.length() - 1).append('\n').append(Strings.INDENT.repeat(level)).append('}').toString();
+  public String toString() {
+    return pairs.entrySet().stream().map(e -> Strings.toQuoted(e.getKey()) + ':' + e.getValue())
+        .collect(joining(",", "{", "}"));
   }
 }

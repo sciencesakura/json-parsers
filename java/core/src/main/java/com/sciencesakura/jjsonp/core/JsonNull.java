@@ -2,19 +2,17 @@
 
 package com.sciencesakura.jjsonp.core;
 
+import org.jspecify.annotations.NonNull;
+
 /**
- * Represents a JSON null value.
+ * Represents a JSON null.
  */
-public enum JsonNull implements JsonValue<Void> {
+public enum JsonNull implements JsonValue {
 
   INSTANCE;
 
   @Override
-  public Void value() {
-    return null;
-  }
-
-  @Override
+  @NonNull
   public String toString() {
     return "null";
   }

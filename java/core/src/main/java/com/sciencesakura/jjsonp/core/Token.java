@@ -8,9 +8,6 @@ sealed interface Token {
 
   long column();
 
-  record EOF(long line, long column) implements Token {
-  }
-
   record LeftBracket(long line, long column) implements Token {
   }
 
@@ -38,12 +35,12 @@ sealed interface Token {
   record Null(long line, long column) implements Token {
   }
 
-  record String(java.lang.String value, long line, long column) implements Token {
+  record String(long line, long column, java.lang.String value) implements Token {
   }
 
-  record Integer(long value, long line, long column) implements Token {
+  record Integer(long line, long column, long value) implements Token {
   }
 
-  record Float(double value, long line, long column) implements Token {
+  record Float(long line, long column, double value) implements Token {
   }
 }

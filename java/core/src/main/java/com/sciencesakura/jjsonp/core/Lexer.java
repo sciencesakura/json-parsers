@@ -6,10 +6,15 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Iterator;
-import org.jspecify.annotations.NonNull;
 
 final class Lexer implements Iterator<Token> {
+
+  private static final int REPLACEMENT_CHAR = 0xFFFD;
+
+  private final Deque<Byte> bb = new ArrayDeque<>();
 
   private final ReadableByteChannel channel;
 
@@ -23,7 +28,7 @@ final class Lexer implements Iterator<Token> {
 
   private long prevColumn;
 
-  private Token next;
+  private Token current;
 
   private Lexer(ReadableByteChannel channel, int bufferSize) {
     this.channel = channel;
@@ -49,69 +54,68 @@ final class Lexer implements Iterator<Token> {
 
   @Override
   public boolean hasNext() {
-    if (next == null) {
+    if (current == null) {
       int c;
       do {
         c = nextChar();
-      } while (Strings.isWhitespace(c));
-      next = switch (c) {
-        case -1 -> new Token.EOF(line, column);
+      } while (Characters.isWhitespace(c));
+      if (c == -1) {
+        return false;
+      }
+      current = switch (c) {
         case '{' -> new Token.LeftCurly(line, column);
         case '}' -> new Token.RightCurly(line, column);
         case '[' -> new Token.LeftBracket(line, column);
         case ']' -> new Token.RightBracket(line, column);
         case ':' -> new Token.Colon(line, column);
         case ',' -> new Token.Comma(line, column);
-        case '"' -> recognizeString();
+        case '"' -> nextString();
         default -> {
-          if (Strings.isAlpha(c)) {
-            yield recognizeKeyword(c);
-          } else if (Strings.isDigit(c) || c == '-') {
-            yield recognizeNumber(c);
+          if (Characters.isAlpha(c)) {
+            yield nextKeyword(c);
+          } else if (Characters.isDigit(c) || c == '-') {
+            yield nextNumber(c);
           }
           throw ParserException.unexpectedCharacter(c, line, column);
         }
       };
     }
-    return !(next instanceof Token.EOF);
+    return true;
   }
 
   @Override
-  @NonNull
   public Token next() {
     if (!hasNext()) {
       throw ParserException.unexpectedEOF(line, column);
     }
-    var current = next;
-    next = null;
+    var current = this.current;
+    this.current = null;
     return current;
   }
 
-  private Token recognizeString() {
+  private Token nextString() {
     var startColumn = column;
     var str = new StringBuilder();
+    int c;
     var escaped = false;
-    for (var c = nextChar(); c != -1; c = nextChar()) {
+    while ((c = nextChar()) != -1) {
       if (escaped) {
+        escaped = false;
         switch (c) {
-          case '"' -> str.append('"');
-          case '\\' -> str.append('\\');
-          case '/' -> str.append('/');
+          case '"', '\\', '/' -> str.appendCodePoint(c);
           case 'b' -> str.append('\b');
           case 'f' -> str.append('\f');
           case 'n' -> str.append('\n');
           case 'r' -> str.append('\r');
           case 't' -> str.append('\t');
-          case 'u' -> str.appendCodePoint(decodeHex(nextChar()) << 12 | decodeHex(nextChar()) << 8
-              | decodeHex(nextChar()) << 4 | decodeHex(nextChar()));
+          case 'u' -> str.appendCodePoint(nextHex() << 12 | nextHex() << 8 | nextHex() << 4 | nextHex());
           default -> throw ParserException.unexpectedCharacter(c, line, column);
         }
-        escaped = false;
       } else if (c == '"') {
-        return new Token.String(str.toString(), line, startColumn);
+        return new Token.String(line, startColumn, str.toString());
       } else if (c == '\\') {
         escaped = true;
-      } else if (Character.isISOControl(c)) {
+      } else if (Characters.isControl(c)) {
         throw ParserException.unexpectedCharacter(c, line, column);
       } else {
         str.appendCodePoint(c);
@@ -120,29 +124,23 @@ final class Lexer implements Iterator<Token> {
     throw ParserException.unexpectedEOF(line, column);
   }
 
-  private int decodeHex(int c) {
-    if (Strings.isDigit(c)) {
-      return c - '0';
+  private int nextHex() {
+    var c = nextChar();
+    var h = Characters.decodeHex(c);
+    if (h == -1) {
+      throw ParserException.unexpectedCharacter(c, line, column);
     }
-    if ('A' <= c && c <= 'F') {
-      return c - 'A' + 10;
-    }
-    if ('a' <= c && c <= 'f') {
-      return c - 'a' + 10;
-    }
-    throw ParserException.unexpectedCharacter(c, line, column);
+    return h;
   }
 
-  private Token recognizeKeyword(int c1) {
+  private Token nextKeyword(int c1) {
     var startColumn = column;
-    var str = new StringBuilder(5).appendCodePoint(c1);
-    int c;
-    for (c = nextChar(); Strings.isAlpha(c); c = nextChar()) {
+    var str = new StringBuilder(5);
+    var c = c1;
+    do {
       str.appendCodePoint(c);
-    }
-    if (c != -1) {
-      saveChar(c);
-    }
+    } while (Characters.isAlpha(c = nextChar()));
+    backChar(c);
     var keyword = str.toString();
     return switch (keyword) {
       case "true" -> new Token.True(line, startColumn);
@@ -152,28 +150,29 @@ final class Lexer implements Iterator<Token> {
     };
   }
 
-  private Token recognizeNumber(int c1) {
+  private Token nextNumber(int c1) {
     @SuppressWarnings("checkstyle:VariableDeclarationUsageDistance")
     var startColumn = column;
-    var str = new StringBuilder().appendCodePoint(c1);
-    int c;
-    for (c = nextChar(); Strings.isDigit(c); c = nextChar()) {
+    var str = new StringBuilder();
+    var c = c1;
+    do {
       str.appendCodePoint(c);
-    }
+    } while (Characters.isDigit(c = nextChar()));
     if (c1 == '-' && str.length() == 1) {
       throw ParserException.unexpectedCharacter(c, line, column);
     }
-    var isFloat = false;
+    var integral = true;
     if (c == '.') {
       str.append('.');
       var cnt = 0;
-      for (c = nextChar(); Strings.isDigit(c); c = nextChar(), cnt++) {
+      while (Characters.isDigit(c = nextChar())) {
         str.appendCodePoint(c);
+        cnt++;
       }
       if (cnt == 0) {
         throw ParserException.unexpectedCharacter(c, line, column);
       }
-      isFloat = true;
+      integral = false;
     }
     if (c == 'e' || c == 'E') {
       str.append('e');
@@ -183,25 +182,23 @@ final class Lexer implements Iterator<Token> {
         c = nextChar();
       }
       var cnt = 0;
-      for (; Strings.isDigit(c); c = nextChar(), cnt++) {
+      for (; Characters.isDigit(c); c = nextChar(), cnt++) {
         str.appendCodePoint(c);
       }
       if (cnt == 0) {
         throw ParserException.unexpectedCharacter(c, line, column);
       }
-      isFloat = true;
+      integral = false;
     }
-    if (c != -1) {
-      saveChar(c);
-    }
-    return isFloat ? new Token.Float(Double.parseDouble(str.toString()), line, startColumn)
-        : new Token.Integer(Long.parseLong(str.toString()), line, startColumn);
+    backChar(c);
+    return integral ? new Token.Integer(line, startColumn, Long.parseLong(str.toString()))
+        : new Token.Float(line, startColumn, Double.parseDouble(str.toString()));
   }
 
   private int nextChar() {
     int c;
     if (bc == -1) {
-      c = Strings.nextUTF8Char(() -> buffer.hasRemaining() || load() > 0 ? buffer.get() : -1);
+      c = readChar();
     } else {
       c = bc;
       bc = -1;
@@ -216,13 +213,83 @@ final class Lexer implements Iterator<Token> {
     return c;
   }
 
-  private void saveChar(int c) {
+  private void backChar(int c) {
     bc = c;
     if (c == '\n') {
       line--;
       column = prevColumn;
     } else {
       column--;
+    }
+  }
+
+  private int readChar() {
+    var b1 = readByte();
+    if (b1 == -1) {
+      return -1;
+    }
+    var length = lengthOfChar(b1);
+    if (length == 1) {
+      // U+0000 to U+007F
+      return b1;
+    }
+    if (length == -1) {
+      return REPLACEMENT_CHAR;
+    }
+    var b2 = readByte();
+    if ((b2 & 0xC0) != 0x80) {
+      backBytes(b2);
+      return REPLACEMENT_CHAR;
+    }
+    if (length == 2) {
+      // U+0080 to U+07FF
+      return ((b1 & 0x1F) << 6) | (b2 & 0x3F);
+    }
+    var b3 = readByte();
+    if ((b3 & 0xC0) != 0x80) {
+      backBytes(b2, b3);
+      return REPLACEMENT_CHAR;
+    }
+    if (length == 3) {
+      // U+0800 to U+FFFF
+      return ((b1 & 0x0F) << 12) | ((b2 & 0x3F) << 6) | (b3 & 0x3F);
+    }
+    var b4 = readByte();
+    if ((b4 & 0xC0) != 0x80) {
+      backBytes(b2, b3, b4);
+      return REPLACEMENT_CHAR;
+    }
+    if (length == 4) {
+      // U+10000 to U+10FFFF
+      return ((b1 & 0x07) << 18) | ((b2 & 0x3F) << 12) | ((b3 & 0x3F) << 6) | (b4 & 0x3F);
+    }
+    throw new AssertionError("MUST NOT REACH HERE");
+  }
+
+  private static int lengthOfChar(byte b1) {
+    if ((b1 & 0x80) == 0) {
+      return 1;
+    } else if ((b1 & 0xE0) == 0xC0) {
+      return 2;
+    } else if ((b1 & 0xF0) == 0xE0) {
+      return 3;
+    } else if ((b1 & 0xF8) == 0xF0) {
+      return 4;
+    } else {
+      return -1;
+    }
+  }
+
+  private byte readByte() {
+    if (bb.isEmpty()) {
+      return buffer.hasRemaining() || 0 < load() ? buffer.get() : -1;
+    }
+    return bb.poll();
+  }
+
+  private void backBytes(byte... bytes) {
+    for (var b : bytes) {
+      bb.add(b);
     }
   }
 }

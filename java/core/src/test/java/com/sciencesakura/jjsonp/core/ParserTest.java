@@ -2,23 +2,19 @@
 
 package com.sciencesakura.jjsonp.core;
 
+import static com.sciencesakura.jjsonp.core.TestFunctions.sequencedMapOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.InstanceOfAssertFactories.throwable;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 class ParserTest {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ParserTest.class);
-
   @Test
-  void whenEmpty() {
+  void returnEmptyIfNoToken() {
     var actual = new Parser(Collections.emptyIterator()).parse();
     assertThat(actual).isEmpty();
   }
@@ -46,21 +42,21 @@ class ParserTest {
 
   @Test
   void parseString() {
-    var tokens = List.of(new Token.String("foo", 0, 0));
+    var tokens = List.of(new Token.String(0, 0, "foo"));
     var actual = new Parser(tokens.iterator()).parse();
     assertThat(actual).contains(new JsonString("foo"));
   }
 
   @Test
   void parseInteger() {
-    var tokens = List.of(new Token.Integer(42, 0, 0));
+    var tokens = List.of(new Token.Integer(0, 0, 42));
     var actual = new Parser(tokens.iterator()).parse();
     assertThat(actual).contains(new JsonInteger(42));
   }
 
   @Test
   void parseFloat() {
-    var tokens = List.of(new Token.Float(3.14, 0, 0));
+    var tokens = List.of(new Token.Float(0, 0, 3.14));
     var actual = new Parser(tokens.iterator()).parse();
     assertThat(actual).contains(new JsonFloat(3.14));
   }
@@ -76,118 +72,117 @@ class ParserTest {
   }
 
   @Test
-  void parse1ElementArray() {
+  void parseArrayHavingOneElement() {
     var tokens = List.of(
         new Token.LeftBracket(0, 0),
-        new Token.String("foo", 0, 0),
+        new Token.String(0, 0, "foo"),
         new Token.RightBracket(0, 0)
     );
     var actual = new Parser(tokens.iterator()).parse();
-    assertThat(actual).contains(new JsonArray(List.of(
-        new JsonString("foo")
-    )));
+    assertThat(actual).contains(new JsonArray(new JsonString("foo")));
   }
 
   @Test
-  void parseNElementsArray() {
+  void parseArrayHavingTwoElements() {
     var tokens = List.of(
         new Token.LeftBracket(0, 0),
-        new Token.String("foo", 0, 0),
+        new Token.String(0, 0, "foo"),
         new Token.Comma(0, 0),
-        new Token.Integer(42, 0, 0),
+        new Token.Integer(0, 0, 42),
         new Token.RightBracket(0, 0)
     );
     var actual = new Parser(tokens.iterator()).parse();
-    assertThat(actual).contains(new JsonArray(List.of(
+    assertThat(actual).contains(new JsonArray(
         new JsonString("foo"),
         new JsonInteger(42)
-    )));
+    ));
   }
 
   @Test
-  void throwExceptionWhenArrayEndsUnexpectedly_1() {
+  void throwExceptionForUnclosedArray_1() {
+    // [
+    var tokens = List.of(new Token.LeftBracket(0, 0));
+    var parser = new Parser(tokens.iterator());
+    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
+        .satisfies(e -> assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF));
+  }
+
+  @Test
+  void throwExceptionForUnclosedArray_2() {
+    // ["foo"
     var tokens = List.of(
-        new Token.LeftBracket(0, 0)
+        new Token.LeftBracket(0, 0),
+        new Token.String(0, 0, "foo")
     );
     var parser = new Parser(tokens.iterator());
     assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
-        .satisfies(e -> {
-          LOG.info("thrown exception", e);
-          assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF);
-        });
+        .satisfies(e -> assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF));
   }
 
   @Test
-  void throwExceptionWhenArrayEndsUnexpectedly_2() {
+  void throwExceptionForUnclosedArray_3() {
+    // ["foo",
     var tokens = List.of(
         new Token.LeftBracket(0, 0),
-        new Token.String("foo", 0, 0)
-    );
-    var parser = new Parser(tokens.iterator());
-    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
-        .satisfies(e -> {
-          LOG.info("thrown exception", e);
-          assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF);
-        });
-  }
-
-  @Test
-  void throwExceptionWhenArrayEndsUnexpectedly_3() {
-    var tokens = List.of(
-        new Token.LeftBracket(0, 0),
-        new Token.String("foo", 0, 0),
+        new Token.String(0, 0, "foo"),
         new Token.Comma(0, 0)
     );
     var parser = new Parser(tokens.iterator());
     assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
-        .satisfies(e -> {
-          LOG.info("thrown exception", e);
-          assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF);
-        });
+        .satisfies(e -> assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF));
   }
 
   @Test
-  void throwExceptionOnUnexpectedTokenInArray_1() {
+  void throwExceptionForInvalidSequenceOfTokens_1_1() {
+    // [,]
     var tokens = List.of(
-        new Token.LeftBracket(0, 0),
-        new Token.Comma(0, 0)
+        new Token.LeftBracket(1, 2),
+        new Token.Comma(3, 4),
+        new Token.RightBracket(5, 6)
     );
     var parser = new Parser(tokens.iterator());
     assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
         .satisfies(e -> {
-          LOG.info("thrown exception", e);
           assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_TOKEN);
+          assertThat(e.getLine()).isEqualTo(3);
+          assertThat(e.getColumn()).isEqualTo(4);
         });
   }
 
   @Test
-  void throwExceptionOnUnexpectedTokenInArray_2() {
+  void throwExceptionForInvalidSequenceOfTokens_1_2() {
+    // ["foo",,]
     var tokens = List.of(
-        new Token.LeftBracket(0, 0),
-        new Token.String("foo", 0, 0),
-        new Token.Comma(0, 0),
-        new Token.Comma(0, 0)
+        new Token.LeftBracket(1, 2),
+        new Token.String(3, 4, "foo"),
+        new Token.Comma(5, 6),
+        new Token.Comma(7, 8),
+        new Token.RightBracket(9, 10)
     );
     var parser = new Parser(tokens.iterator());
     assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
         .satisfies(e -> {
-          LOG.info("thrown exception", e);
           assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_TOKEN);
+          assertThat(e.getLine()).isEqualTo(7);
+          assertThat(e.getColumn()).isEqualTo(8);
         });
   }
 
   @Test
-  void throwExceptionOnUnexpectedTokenInArray_3() {
+  void throwExceptionForInvalidSequenceOfTokens_1_3() {
+    // ["foo" "bar"]
     var tokens = List.of(
-        new Token.LeftBracket(0, 0),
-        new Token.String("foo", 0, 0),
-        new Token.String("bar", 0, 0)
+        new Token.LeftBracket(1, 2),
+        new Token.String(3, 4, "foo"),
+        new Token.String(5, 6, "bar"),
+        new Token.RightBracket(7, 8)
     );
     var parser = new Parser(tokens.iterator());
     assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
         .satisfies(e -> {
-          LOG.info("thrown exception", e);
           assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_TOKEN);
+          assertThat(e.getLine()).isEqualTo(5);
+          assertThat(e.getColumn()).isEqualTo(6);
         });
   }
 
@@ -202,237 +197,189 @@ class ParserTest {
   }
 
   @Test
-  void parse1MemberObject() {
+  void parseObjectHavingOnePair() {
     var tokens = List.of(
         new Token.LeftCurly(0, 0),
-        new Token.String("foo", 0, 0),
+        new Token.String(0, 0, "foo"),
         new Token.Colon(0, 0),
-        new Token.String("bar", 0, 0),
+        new Token.String(0, 0, "bar"),
         new Token.RightCurly(0, 0)
     );
     var actual = new Parser(tokens.iterator()).parse();
-    assertThat(actual).contains(new JsonObject(Map.of(
-        "foo", new JsonString("bar")
-    )));
+    assertThat(actual).contains(new JsonObject(sequencedMapOf("foo", new JsonString("bar"))));
   }
 
   @Test
-  void parseNMembersObject() {
+  void parseObjectHavingTwoPairs() {
     var tokens = List.of(
         new Token.LeftCurly(0, 0),
-        new Token.String("foo", 0, 0),
+        new Token.String(0, 0, "foo"),
         new Token.Colon(0, 0),
-        new Token.String("bar", 0, 0),
+        new Token.String(0, 0, "bar"),
         new Token.Comma(0, 0),
-        new Token.String("baz", 0, 0),
+        new Token.String(0, 0, "baz"),
         new Token.Colon(0, 0),
-        new Token.Integer(42, 0, 0),
+        new Token.Integer(0, 0, 42),
         new Token.RightCurly(0, 0)
     );
     var actual = new Parser(tokens.iterator()).parse();
-    assertThat(actual).contains(new JsonObject(Map.of(
+    assertThat(actual).contains(new JsonObject(sequencedMapOf(
         "foo", new JsonString("bar"),
         "baz", new JsonInteger(42)
     )));
   }
 
   @Test
-  void throwExceptionWhenObjectEndsUnexpectedly_1() {
-    var tokens = List.of(
-        new Token.LeftCurly(0, 0)
-    );
+  void throwExceptionForUnclosedObject_1() {
+    // {
+    var tokens = List.of(new Token.LeftCurly(0, 0));
     var parser = new Parser(tokens.iterator());
     assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
-        .satisfies(e -> {
-          LOG.info("thrown exception", e);
-          assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF);
-        });
+        .satisfies(e -> assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF));
   }
 
   @Test
-  void throwExceptionWhenObjectEndsUnexpectedly_2() {
+  void throwExceptionForUnclosedObject_2() {
+    // {"foo"
     var tokens = List.of(
         new Token.LeftCurly(0, 0),
-        new Token.String("foo", 0, 0)
+        new Token.String(0, 0, "foo")
     );
     var parser = new Parser(tokens.iterator());
     assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
-        .satisfies(e -> {
-          LOG.info("thrown exception", e);
-          assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF);
-        });
+        .satisfies(e -> assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF));
   }
 
   @Test
-  void throwExceptionWhenObjectEndsUnexpectedly_3() {
+  void throwExceptionForUnclosedObject_3() {
+    // {"foo":
     var tokens = List.of(
         new Token.LeftCurly(0, 0),
-        new Token.String("foo", 0, 0),
+        new Token.String(0, 0, "foo"),
         new Token.Colon(0, 0)
     );
     var parser = new Parser(tokens.iterator());
     assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
-        .satisfies(e -> {
-          LOG.info("thrown exception", e);
-          assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF);
-        });
+        .satisfies(e -> assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF));
   }
 
   @Test
-  void throwExceptionWhenObjectEndsUnexpectedly_4() {
+  void throwExceptionForUnclosedObject_4() {
+    // {"foo": "bar"
     var tokens = List.of(
         new Token.LeftCurly(0, 0),
-        new Token.String("foo", 0, 0),
+        new Token.String(0, 0, "foo"),
         new Token.Colon(0, 0),
-        new Token.String("bar", 0, 0)
+        new Token.String(0, 0, "bar")
     );
     var parser = new Parser(tokens.iterator());
     assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
-        .satisfies(e -> {
-          LOG.info("thrown exception", e);
-          assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF);
-        });
+        .satisfies(e -> assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF));
   }
 
   @Test
-  void throwExceptionWhenObjectEndsUnexpectedly_5() {
+  void throwExceptionForUnclosedObject_5() {
+    // {"foo": "bar",
     var tokens = List.of(
         new Token.LeftCurly(0, 0),
-        new Token.String("foo", 0, 0),
+        new Token.String(0, 0, "foo"),
         new Token.Colon(0, 0),
-        new Token.String("bar", 0, 0),
+        new Token.String(0, 0, "bar"),
         new Token.Comma(0, 0)
     );
     var parser = new Parser(tokens.iterator());
     assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
-        .satisfies(e -> {
-          LOG.info("thrown exception", e);
-          assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF);
-        });
+        .satisfies(e -> assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF));
   }
 
   @Test
-  void throwExceptionOnUnexpectedTokenInObject_1() {
+  void throwExceptionForInvalidSequenceOfTokens_2_1() {
+    // {,}
     var tokens = List.of(
-        new Token.LeftCurly(0, 0),
-        new Token.Colon(0, 0)
+        new Token.LeftCurly(1, 2),
+        new Token.Colon(3, 4),
+        new Token.RightCurly(5, 6)
     );
     var parser = new Parser(tokens.iterator());
     assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
         .satisfies(e -> {
-          LOG.info("thrown exception", e);
           assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_TOKEN);
+          assertThat(e.getLine()).isEqualTo(3);
+          assertThat(e.getColumn()).isEqualTo(4);
         });
   }
 
   @Test
-  void throwExceptionOnUnexpectedTokenInObject_2() {
+  void throwExceptionForInvalidSequenceOfTokens_2_2() {
+    // {"foo"}
     var tokens = List.of(
-        new Token.LeftCurly(0, 0),
-        new Token.String("foo", 0, 0),
-        new Token.Colon(0, 0),
-        new Token.Colon(0, 0)
+        new Token.LeftCurly(1, 2),
+        new Token.String(3, 4, "foo"),
+        new Token.RightCurly(5, 6)
     );
     var parser = new Parser(tokens.iterator());
     assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
         .satisfies(e -> {
-          LOG.info("thrown exception", e);
           assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_TOKEN);
+          assertThat(e.getLine()).isEqualTo(5);
+          assertThat(e.getColumn()).isEqualTo(6);
         });
   }
 
   @Test
-  void throwExceptionOnUnexpectedTokenInObject_3() {
+  void throwExceptionForInvalidSequenceOfTokens_2_3() {
+    // {"foo"::}
     var tokens = List.of(
-        new Token.LeftCurly(0, 0),
-        new Token.Comma(0, 0)
+        new Token.LeftCurly(1, 2),
+        new Token.String(3, 4, "foo"),
+        new Token.Colon(5, 6),
+        new Token.Colon(7, 8),
+        new Token.RightCurly(9, 10)
     );
     var parser = new Parser(tokens.iterator());
     assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
         .satisfies(e -> {
-          LOG.info("thrown exception", e);
           assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_TOKEN);
+          assertThat(e.getLine()).isEqualTo(7);
+          assertThat(e.getColumn()).isEqualTo(8);
         });
   }
 
   @Test
-  void throwExceptionOnUnexpectedTokenInObject_4() {
+  void throwExceptionForInvalidSequenceOfTokens_2_4() {
+    // {"foo" "bar"}
     var tokens = List.of(
-        new Token.LeftCurly(0, 0),
-        new Token.String("foo", 0, 0),
-        new Token.Comma(0, 0)
+        new Token.LeftCurly(1, 2),
+        new Token.String(3, 4, "foo"),
+        new Token.String(5, 6, "bar"),
+        new Token.RightCurly(7, 8)
     );
     var parser = new Parser(tokens.iterator());
     assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
         .satisfies(e -> {
-          LOG.info("thrown exception", e);
           assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_TOKEN);
+          assertThat(e.getLine()).isEqualTo(5);
+          assertThat(e.getColumn()).isEqualTo(6);
         });
   }
 
   @Test
-  void throwExceptionOnUnexpectedTokenInObject_5() {
+  void throwExceptionForInvalidSequenceOfTokens_2_5() {
+    // {"foo": 42,}
     var tokens = List.of(
-        new Token.LeftCurly(0, 0),
-        new Token.String("foo", 0, 0),
-        new Token.Colon(0, 0),
-        new Token.Comma(0, 0)
+        new Token.LeftCurly(1, 2),
+        new Token.String(3, 4, "foo"),
+        new Token.Colon(5, 6),
+        new Token.Integer(7, 8, 42),
+        new Token.Comma(9, 10),
+        new Token.RightCurly(11, 12)
     );
     var parser = new Parser(tokens.iterator());
     assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
         .satisfies(e -> {
-          LOG.info("thrown exception", e);
           assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_TOKEN);
-        });
-  }
-
-  @Test
-  void throwExceptionOnUnexpectedTokenInObject_6() {
-    var tokens = List.of(
-        new Token.LeftCurly(0, 0),
-        new Token.String("foo", 0, 0),
-        new Token.Colon(0, 0),
-        new Token.String("bar", 0, 0),
-        new Token.Comma(0, 0),
-        new Token.Comma(0, 0)
-    );
-    var parser = new Parser(tokens.iterator());
-    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
-        .satisfies(e -> {
-          LOG.info("thrown exception", e);
-          assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_TOKEN);
-        });
-  }
-
-  @Test
-  void throwExceptionOnUnexpectedTokenInObject_7() {
-    var tokens = List.of(
-        new Token.LeftCurly(0, 0),
-        new Token.String("foo", 0, 0),
-        new Token.String("bar", 0, 0)
-    );
-    var parser = new Parser(tokens.iterator());
-    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
-        .satisfies(e -> {
-          LOG.info("thrown exception", e);
-          assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_TOKEN);
-        });
-  }
-
-  @Test
-  void throwExceptionOnUnexpectedTokenInObject_8() {
-    var tokens = List.of(
-        new Token.LeftCurly(0, 0),
-        new Token.String("foo", 0, 0),
-        new Token.Colon(0, 0),
-        new Token.String("bar", 0, 0),
-        new Token.String("baz", 0, 0)
-    );
-    var parser = new Parser(tokens.iterator());
-    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
-        .satisfies(e -> {
-          LOG.info("thrown exception", e);
-          assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_TOKEN);
+          assertThat(e.getLine()).isEqualTo(11);
+          assertThat(e.getColumn()).isEqualTo(12);
         });
   }
 }

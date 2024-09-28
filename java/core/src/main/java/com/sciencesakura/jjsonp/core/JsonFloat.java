@@ -2,51 +2,22 @@
 
 package com.sciencesakura.jjsonp.core;
 
-import java.io.Serial;
 import org.jspecify.annotations.NonNull;
 
 /**
- * Represents a JSON floating-point number value.
+ * Represents a JSON number of floating-point type.
+ *
+ * @param value the floating-point number represented by this JSON number.
  */
-public final class JsonFloat implements JsonValue<Double>, Comparable<JsonFloat> {
-
-  @Serial
-  private static final long serialVersionUID = 1L;
-
-  private final double value;
-
-  JsonFloat(double value) {
-    this.value = value;
-  }
+public record JsonFloat(double value) implements JsonValue, Comparable<JsonFloat> {
 
   @Override
-  @NonNull
-  public Double value() {
-    return value;
-  }
-
-  @Override
-  public int compareTo(JsonFloat o) {
+  public int compareTo(@NonNull JsonFloat o) {
     return Double.compare(value, o.value);
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj instanceof JsonFloat that) {
-      return Double.doubleToLongBits(value) == Double.doubleToLongBits(that.value);
-    }
-    return false;
-  }
-
-  @Override
-  public int hashCode() {
-    return Double.hashCode(value);
-  }
-
-  @Override
+  @NonNull
   public String toString() {
     return Double.toString(value);
   }

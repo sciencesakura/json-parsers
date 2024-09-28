@@ -20,14 +20,14 @@ public final class ParserException extends RuntimeException {
   private final long column;
 
   private ParserException(String message, Type type, long line, long column) {
-    super(line == -1 || column == -1 ? message : "%s at %d:%d".formatted(message, line, column));
+    super(line == 0 && column == 0 ? message : "%s at %d:%d".formatted(message, line, column));
     this.type = type;
     this.line = line;
     this.column = column;
   }
 
   private ParserException(String message, Type type) {
-    this(message, type, -1, -1);
+    this(message, type, 0, 0);
   }
 
   @NonNull
@@ -47,8 +47,8 @@ public final class ParserException extends RuntimeException {
     if (c == -1) {
       return unexpectedEOF(line, column);
     }
-    var message = (Character.isISOControl(c) ? "Unexpected character 'U+%04X'" : "Unexpected character '%c'").formatted(c);
-    return new ParserException(message, Type.UNEXPECTED_CHARACTER, line, column);
+    var ch = Characters.isControl(c) ? "U+%04X".formatted(c) : Character.toString(c);
+    return new ParserException("Unexpected character '%s'".formatted(ch), Type.UNEXPECTED_CHARACTER, line, column);
   }
 
   static ParserException unexpectedEOF(long line, long column) {
@@ -64,7 +64,7 @@ public final class ParserException extends RuntimeException {
   }
 
   static ParserException unexpectedToken(Token token) {
-    return new ParserException("Unexpected token '%s'".formatted(token.getClass().getSimpleName()), Type.UNEXPECTED_TOKEN, token.line(), token.column());
+    return new ParserException("Unexpected token '%s'".formatted(token), Type.UNEXPECTED_TOKEN, token.line(), token.column());
   }
 
   /**

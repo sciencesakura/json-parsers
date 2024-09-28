@@ -2,52 +2,23 @@
 
 package com.sciencesakura.jjsonp.core;
 
-import java.io.Serial;
 import org.jspecify.annotations.NonNull;
 
 /**
- * Represents a JSON string value.
+ * Represents a JSON string.
+ *
+ * @param value the string value represented by this JSON string.
  */
-public final class JsonString implements JsonValue<String>, Comparable<JsonString> {
-
-  @Serial
-  private static final long serialVersionUID = 1L;
-
-  private final String value;
-
-  JsonString(String value) {
-    this.value = value;
-  }
+public record JsonString(@NonNull String value) implements JsonValue, Comparable<JsonString> {
 
   @Override
-  @NonNull
-  public String value() {
-    return value;
-  }
-
-  @Override
-  public int compareTo(JsonString o) {
+  public int compareTo(@NonNull JsonString o) {
     return value.compareTo(o.value);
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o instanceof JsonString other) {
-      return value.equals(other.value);
-    }
-    return false;
-  }
-
-  @Override
-  public int hashCode() {
-    return value.hashCode();
-  }
-
-  @Override
+  @NonNull
   public String toString() {
-    return Strings.toJson(value);
+    return Strings.toQuoted(value);
   }
 }

@@ -5,7 +5,6 @@ package com.sciencesakura.jjsonp.core;
 import static java.util.stream.Collectors.joining;
 
 import java.io.Serial;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -14,17 +13,32 @@ import org.jspecify.annotations.NonNull;
 /**
  * Represents a JSON array.
  */
-public final class JsonArray implements JsonContainer<List<JsonValue<?>>>, Iterable<JsonValue<?>> {
+public final class JsonArray implements JsonValue, Iterable<JsonValue> {
+
+  /** An empty JSON array. */
+  public static final JsonArray EMPTY = new JsonArray();
 
   @Serial
   private static final long serialVersionUID = 1L;
 
-  public static final JsonArray EMPTY = new JsonArray(Collections.emptyList());
+  private final List<JsonValue> elements;
 
-  private final List<JsonValue<?>> elements;
+  /**
+   * Constructs a JSON array with the specified elements.
+   *
+   * @param elements the JSON value list represented by this JSON array.
+   */
+  public JsonArray(@NonNull List<? extends JsonValue> elements) {
+    this.elements = List.copyOf(elements);
+  }
 
-  JsonArray(List<JsonValue<?>> elements) {
-    this.elements = Collections.unmodifiableList(elements);
+  /**
+   * Constructs a JSON array with the specified elements.
+   *
+   * @param elements the JSON value array represented by this JSON array.
+   */
+  public JsonArray(@NonNull JsonValue... elements) {
+    this.elements = List.of(elements);
   }
 
   /**
@@ -35,46 +49,47 @@ public final class JsonArray implements JsonContainer<List<JsonValue<?>>>, Itera
    * @throws IndexOutOfBoundsException if the index is out of range.
    */
   @NonNull
-  public JsonValue<?> get(int index) {
+  public JsonValue get(int index) {
     return elements.get(index);
   }
 
-  @Override
+  /**
+   * Returns {@code true} if this array contains no elements.
+   *
+   * @return {@code true} if this array contains no elements.
+   */
+  public boolean isEmpty() {
+    return elements.isEmpty();
+  }
+
+  /**
+   * Returns the number of elements in this array.
+   *
+   * @return the number of elements in this array.
+   */
   public int size() {
     return elements.size();
   }
 
   @Override
   @NonNull
-  public List<JsonValue<?>> value() {
-    return elements;
-  }
-
-  @Override
-  @NonNull
-  public Iterator<JsonValue<?>> iterator() {
+  public Iterator<JsonValue> iterator() {
     return elements.iterator();
   }
 
   /**
-   * Returns a sequential {@code Stream} over the elements in this array.
+   * Returns a sequential {@code Stream} with this array as its source.
    *
-   * @return a sequential {@code Stream} over the elements in this array.
+   * @return a sequential {@code Stream} with this array as its source.
    */
   @NonNull
-  public Stream<JsonValue<?>> stream() {
+  public Stream<JsonValue> stream() {
     return elements.stream();
   }
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj instanceof JsonArray that) {
-      return elements.equals(that.elements);
-    }
-    return false;
+    return obj == this || (obj instanceof JsonArray a && elements.equals(a.elements));
   }
 
   @Override
@@ -83,32 +98,8 @@ public final class JsonArray implements JsonContainer<List<JsonValue<?>>>, Itera
   }
 
   @Override
+  @NonNull
   public String toString() {
     return stream().map(JsonValue::toString).collect(joining(",", "[", "]"));
-  }
-
-  @Override
-  @NonNull
-  public String toPrettyString() {
-    return toPrettyString(0);
-  }
-
-  String toPrettyString(int level) {
-    if (isEmpty()) {
-      return "[]";
-    }
-    var nextLevel = level + 1;
-    var nextIndent = Strings.INDENT.repeat(nextLevel);
-    var s = new StringBuilder().append('[');
-    for (var e : this) {
-      s.append('\n').append(nextIndent);
-      switch (e) {
-        case JsonArray a -> s.append(a.toPrettyString(nextLevel));
-        case JsonObject o -> s.append(o.toPrettyString(nextLevel));
-        default -> s.append(e.toPrettyString());
-      }
-      s.append(',');
-    }
-    return s.deleteCharAt(s.length() - 1).append('\n').append(Strings.INDENT.repeat(level)).append(']').toString();
   }
 }

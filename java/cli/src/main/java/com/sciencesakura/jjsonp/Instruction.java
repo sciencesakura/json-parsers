@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-package com.sciencesakura.jjsonp.cli;
+package com.sciencesakura.jjsonp;
 
 sealed interface Instruction {
 

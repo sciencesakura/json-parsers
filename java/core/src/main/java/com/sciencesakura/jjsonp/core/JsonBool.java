@@ -5,21 +5,25 @@ package com.sciencesakura.jjsonp.core;
 import org.jspecify.annotations.NonNull;
 
 /**
- * Represents a JSON boolean value.
+ * Represents a JSON boolean.
  */
-public enum JsonBool implements JsonValue<Boolean> {
+public enum JsonBool implements JsonValue {
 
   FALSE,
 
   TRUE;
 
-  @Override
-  @NonNull
-  public Boolean value() {
+  /**
+   * Returns the boolean value represented by this JSON boolean.
+   *
+   * @return the boolean value represented by this JSON boolean.
+   */
+  public boolean value() {
     return this == TRUE;
   }
 
   @Override
+  @NonNull
   public String toString() {
     return String.valueOf(this == TRUE);
   }

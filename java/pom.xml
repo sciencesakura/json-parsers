@@ -58,13 +58,11 @@
     <spotbugs-maven-plugin.version>4.8.6.2</spotbugs-maven-plugin.version>
 
     <!-- dependency versions -->
+    <assertj-core.version>3.26.3</assertj-core.version>
     <checkstyle.version>10.18.1</checkstyle.version>
-    <json-unit.version>3.4.1</json-unit.version>
-    <jsonorg.version>20240303</jsonorg.version>
     <jspecify.version>1.0.0</jspecify.version>
     <junit-jupiter.version>5.11.0</junit-jupiter.version>
     <picocli.version>4.7.6</picocli.version>
-    <slf4j.version>2.0.13</slf4j.version>
   </properties>
 
   <modules>
@@ -75,19 +73,14 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-core</artifactId>
+        <version>${assertj-core.version}</version>
+      </dependency>
+      <dependency>
         <groupId>info.picocli</groupId>
         <artifactId>picocli</artifactId>
         <version>${picocli.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>net.javacrumbs.json-unit</groupId>
-        <artifactId>json-unit-assertj</artifactId>
-        <version>${json-unit.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.json</groupId>
-        <artifactId>json</artifactId>
-        <version>${jsonorg.version}</version>
       </dependency>
       <dependency>
         <groupId>org.jspecify</groupId>
@@ -98,11 +91,6 @@
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter</artifactId>
         <version>${junit-jupiter.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-simple</artifactId>
-        <version>${slf4j.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

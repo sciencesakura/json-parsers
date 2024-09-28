@@ -101,7 +101,7 @@ class LexerSpec extends Specification {
     channel?.close()
   }
 
-  def 'recognize escape sequences'() {
+  def 'recognize strings containing escape sequences'() {
     given:
     def text = '"\\"" "\\\\" "\\/" "\\b" "\\f" "\\n" "\\r" "\\t"'
     def channel = channelFrom text
@@ -125,7 +125,7 @@ class LexerSpec extends Specification {
     channel?.close()
   }
 
-  def 'recognize unicode sequences'() {
+  def 'recognize strings containing unicode sequences'() {
     given:
     def text = '''\
         "\\u0048\\u0065\\u006C\\u006C\\u006F"
@@ -148,6 +148,37 @@ class LexerSpec extends Specification {
         new Token.String(4, 1, '你好'),
         new Token.String(5, 1, '안녕하세요'),
         new Token.String(6, 1, '👋👋🏻👋🏼👋🏽👋🏾👋🏿'),
+    ]
+
+    cleanup:
+    channel?.close()
+  }
+
+  def 'recognize strings containing invalid UTF-8 byte sequence'() {
+    given:
+    def bytes = [
+        0x22, 0x61, 0x80, 0x62, 0x22, 0x0A,
+        0x22, 0x61, 0xC0, 0x40, 0x62, 0x22, 0x0A,
+        0x22, 0x61, 0xE0, 0x40, 0x80, 0x62, 0x22, 0x0A,
+        0x22, 0x61, 0xE0, 0x80, 0x40, 0x62, 0x22, 0x0A,
+        0x22, 0x61, 0xF0, 0x40, 0x80, 0x80, 0x62, 0x22, 0x0A,
+        0x22, 0x61, 0xF0, 0x80, 0x40, 0x80, 0x62, 0x22, 0x0A,
+        0x22, 0x61, 0xF0, 0x80, 0x80, 0x40, 0x62, 0x22, 0x0A,
+    ] as byte[]
+    def channel = channelFrom bytes
+
+    when:
+    def tokens = Lexer.newLexer(channel, 128).toList()
+
+    then:
+    assert tokens == [
+        new Token.String(1, 1, 'a�b'),
+        new Token.String(2, 1, 'a�@b'),
+        new Token.String(3, 1, 'a�@�b'),
+        new Token.String(4, 1, 'a��@b'),
+        new Token.String(5, 1, 'a�@��b'),
+        new Token.String(6, 1, 'a��@�b'),
+        new Token.String(7, 1, 'a���@b'),
     ]
 
     cleanup:
@@ -523,7 +554,11 @@ class LexerSpec extends Specification {
     channel?.close()
   }
 
-  private static channelFrom(s) {
-    Channels.newChannel(new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8)))
+  private static channelFrom(String s) {
+    channelFrom(s.getBytes(StandardCharsets.UTF_8))
+  }
+
+  private static channelFrom(byte[] bytes) {
+    Channels.newChannel(new ByteArrayInputStream(bytes))
   }
 }

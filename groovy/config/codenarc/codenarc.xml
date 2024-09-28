@@ -18,6 +18,7 @@
     <exclude name="MethodParameterTypeRequired"/>
     <exclude name="MethodReturnTypeRequired"/>
     <exclude name="NoDef"/>
+    <exclude name="StaticMethodsBeforeInstanceMethods"/>
     <exclude name="VariableTypeRequired"/>
   </ruleset-ref>
 

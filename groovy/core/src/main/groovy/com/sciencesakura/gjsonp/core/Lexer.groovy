@@ -12,6 +12,8 @@ class Lexer implements Iterator<Token> {
 
   private static final REPLACEMENT_CHAR = '�'
 
+  private final bb = new ArrayDeque()
+
   private final channel
 
   private final buffer
@@ -189,33 +191,64 @@ class Lexer implements Iterator<Token> {
   private readChar() {
     def b1 = readByte()
     if (b1 == -1) return -1
-    if (!(b1 & 0x80)) {
+    def length = lengthOfChar(b1)
+    if (length == 1) {
       // U+0000 to U+007F
       return b1 as char
     }
+    if (length == -1) return REPLACEMENT_CHAR
     def b2 = readByte()
-    if ((b2 & 0xC0) != 0x80) return REPLACEMENT_CHAR
-    if ((b1 & 0xE0) == 0xC0) {
+    if ((b2 & 0xC0) != 0x80) {
+      if (b2 != -1) {
+        backBytes(b2)
+      }
+      return REPLACEMENT_CHAR
+    }
+    if (length == 2) {
       // U+0080 to U+07FF
       return new String([b1, b2] as byte[], StandardCharsets.UTF_8)
     }
     def b3 = readByte()
-    if ((b3 & 0xC0) != 0x80) return REPLACEMENT_CHAR
-    if ((b1 & 0xF0) == 0xE0) {
+    if ((b3 & 0xC0) != 0x80) {
+      if (b3 != -1) {
+        backBytes(b2, b3)
+      }
+      return REPLACEMENT_CHAR
+    }
+    if (length == 3) {
       // U+0800 to U+FFFF
       return new String([b1, b2, b3] as byte[], StandardCharsets.UTF_8)
     }
     def b4 = readByte()
-    if ((b4 & 0xC0) != 0x80) return REPLACEMENT_CHAR
-    if ((b1 & 0xF8) == 0xF0) {
+    if ((b4 & 0xC0) != 0x80) {
+      if (b4 != -1) {
+        backBytes(b2, b3, b4)
+      }
+      return REPLACEMENT_CHAR
+    }
+    if (length == 4) {
       // U+10000 to U+10FFFF
       return new String([b1, b2, b3, b4] as byte[], StandardCharsets.UTF_8)
     }
-    REPLACEMENT_CHAR
+  }
+
+  private static lengthOfChar(b) {
+    if (!(b & 0x80)) return 1
+    if ((b & 0xE0) == 0xC0) return 2
+    if ((b & 0xF0) == 0xE0) return 3
+    if ((b & 0xF8) == 0xF0) return 4
+    -1
   }
 
   private readByte() {
+    if (bb) {
+      return bb.poll()
+    }
     buffer.hasRemaining() || 0 < load() ? buffer.get() : -1
+  }
+
+  private backBytes(Object... bb) {
+    this.bb.addAll(bb)
   }
 
   private load() {

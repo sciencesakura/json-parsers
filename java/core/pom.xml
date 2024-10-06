@@ -56,7 +56,7 @@
         <artifactId>maven-bundle-plugin</artifactId>
         <configuration>
           <instructions>
-            <Import-Package>!java.*,!org.jspecify.*</Import-Package>
+            <Import-Package>!java.*,!org.jspecify.*,*</Import-Package>
           </instructions>
         </configuration>
       </plugin>

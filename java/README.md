@@ -1,10 +1,10 @@
-# JJsonp
+# JJson Parser
 
 A toy JSON parser written in Java.
 
 ## Requirements
 
-- Java 22+
+- Java 23+
 
 ## How to build
 

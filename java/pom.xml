@@ -8,7 +8,7 @@
   <artifactId>jjsonp</artifactId>
   <version>1.0.0</version>
   <packaging>pom</packaging>
-  <name>JJsonp</name>
+  <name>JJson Parser</name>
   <description>
     A toy JSON parser written in Java.
   </description>
@@ -56,6 +56,7 @@
     <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
     <native-maven-plugin.version>0.10.3</native-maven-plugin.version>
     <spotbugs-maven-plugin.version>4.8.6.4</spotbugs-maven-plugin.version>
+    <versions-maven-plugin.version>2.17.1</versions-maven-plugin.version>
 
     <!-- dependency versions -->
     <assertj-core.version>3.26.3</assertj-core.version>
@@ -138,6 +139,9 @@
               <requireJavaVersion>
                 <version>${java.version}</version>
               </requireJavaVersion>
+              <requireMavenVersion>
+                <version>3.9</version>
+              </requireMavenVersion>
             </rules>
           </configuration>
           <executions>
@@ -221,6 +225,11 @@
           <version>${exec-maven-plugin.version}</version>
         </plugin>
         <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>versions-maven-plugin</artifactId>
+          <version>${versions-maven-plugin.version}</version>
+        </plugin>
+        <plugin>
           <groupId>org.graalvm.buildtools</groupId>
           <artifactId>native-maven-plugin</artifactId>
           <version>${native-maven-plugin.version}</version>
@@ -241,6 +250,10 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>versions-maven-plugin</artifactId>
       </plugin>
     </plugins>
   </build>

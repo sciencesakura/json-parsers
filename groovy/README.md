@@ -4,7 +4,7 @@ A toy JSON parser written in Groovy.
 
 ## Requirements
 
-- Java 21
+- Java 21+
 
 ## How to build
 

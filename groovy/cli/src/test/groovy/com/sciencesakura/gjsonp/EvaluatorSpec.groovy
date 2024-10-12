@@ -14,7 +14,7 @@ class EvaluatorSpec extends Specification {
     ]
 
     when:
-    def actual = new Evaluator(instructions.iterator()).eval(json)
+    def actual = Evaluator.eval(instructions.iterator(), json)
 
     then:
     assert actual == 'bar'
@@ -29,7 +29,7 @@ class EvaluatorSpec extends Specification {
     ]
 
     when:
-    def actual = new Evaluator(instructions.iterator()).eval(json)
+    def actual = Evaluator.eval(instructions.iterator(), json)
 
     then:
     assert actual == 'baz'
@@ -43,7 +43,7 @@ class EvaluatorSpec extends Specification {
     ]
 
     when:
-    def actual = new Evaluator(instructions.iterator()).eval(json)
+    def actual = Evaluator.eval(instructions.iterator(), json)
 
     then:
     assert actual == 2
@@ -58,7 +58,7 @@ class EvaluatorSpec extends Specification {
     ]
 
     when:
-    def actual = new Evaluator(instructions.iterator()).eval(json)
+    def actual = Evaluator.eval(instructions.iterator(), json)
 
     then:
     assert actual == 2

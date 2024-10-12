@@ -3,7 +3,6 @@
 package com.sciencesakura.gjsonp
 
 import com.sciencesakura.gjsonp.core.GJson
-import java.nio.file.Path
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
@@ -16,14 +15,13 @@ import picocli.CommandLine.Parameters
     mixinStandardHelpOptions = true, sortOptions = false)
 class App implements Runnable {
 
+  private static final FMT = new Formatter(System.out)
+
   @Option(names = ['-e', '--expression'], description = 'Use EXPR as an expression.', paramLabel = 'EXPR')
   private String expression
 
-  @Option(names = '--buffer', description = 'Use N bytes as a buffer.', paramLabel = 'N', defaultValue = '8192')
-  private int buffer
-
   @Parameters(description = 'JSON files to process.', paramLabel = 'FILE')
-  private List<Path> files
+  private List<File> files
 
   static void main(args) {
     System.exit(new CommandLine(new App()).execute(args))
@@ -31,19 +29,18 @@ class App implements Runnable {
 
   @Override
   void run() {
+    def inst = new Parser(expression)
     if (files) {
       files.each {
-        output GJson.parse(it.newInputStream(), buffer)
+        output(GJson.parse(it.newInputStream()), inst)
       }
     } else {
-      output GJson.parse(System.in, buffer)
+      output(GJson.parse(System.in), inst)
     }
   }
 
-  private output(json) {
-    def value = new Parser(expression).with {
-      new Evaluator(it).eval(json)
-    }
-    new Formatter(System.out).format(value)
+  private static output(json, inst) {
+    FMT.format(Evaluator.eval(inst, json))
+    println()
   }
 }

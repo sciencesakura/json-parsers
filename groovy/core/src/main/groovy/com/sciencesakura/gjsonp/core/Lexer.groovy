@@ -3,8 +3,6 @@
 package com.sciencesakura.gjsonp.core
 
 import groovy.transform.PackageScope
-import java.nio.ByteBuffer
-import java.nio.channels.ReadableByteChannel
 import java.nio.charset.StandardCharsets
 
 @PackageScope
@@ -12,11 +10,7 @@ class Lexer implements Iterator<Token> {
 
   private static final REPLACEMENT_CHAR = '�'
 
-  private final bb = new ArrayDeque()
-
-  private final channel
-
-  private final buffer
+  private final source
 
   private current
 
@@ -28,13 +22,8 @@ class Lexer implements Iterator<Token> {
 
   private bc = -1
 
-  private Lexer(channel, buffer) {
-    this.channel = channel
-    this.buffer = buffer
-  }
-
-  static Lexer newLexer(ReadableByteChannel channel, int bufferSize) {
-    new Lexer(channel, ByteBuffer.allocate(bufferSize)).tap(this::load)
+  Lexer(InputStream stream) {
+    this.source = new Source(stream)
   }
 
   @Override
@@ -189,7 +178,7 @@ class Lexer implements Iterator<Token> {
   }
 
   private readChar() {
-    def b1 = readByte()
+    def b1 = source.read()
     if (b1 == -1) return -1
     def length = lengthOfChar(b1)
     if (length == 1) {
@@ -197,10 +186,10 @@ class Lexer implements Iterator<Token> {
       return b1 as char
     }
     if (length == -1) return REPLACEMENT_CHAR
-    def b2 = readByte()
+    def b2 = source.read()
     if ((b2 & 0xC0) != 0x80) {
       if (b2 != -1) {
-        backBytes(b2)
+        source.back(b2)
       }
       return REPLACEMENT_CHAR
     }
@@ -208,10 +197,10 @@ class Lexer implements Iterator<Token> {
       // U+0080 to U+07FF
       return new String([b1, b2] as byte[], StandardCharsets.UTF_8)
     }
-    def b3 = readByte()
+    def b3 = source.read()
     if ((b3 & 0xC0) != 0x80) {
       if (b3 != -1) {
-        backBytes(b2, b3)
+        source.back(b2, b3)
       }
       return REPLACEMENT_CHAR
     }
@@ -219,17 +208,15 @@ class Lexer implements Iterator<Token> {
       // U+0800 to U+FFFF
       return new String([b1, b2, b3] as byte[], StandardCharsets.UTF_8)
     }
-    def b4 = readByte()
+    def b4 = source.read()
     if ((b4 & 0xC0) != 0x80) {
       if (b4 != -1) {
-        backBytes(b2, b3, b4)
+        source.back(b2, b3, b4)
       }
       return REPLACEMENT_CHAR
     }
-    if (length == 4) {
-      // U+10000 to U+10FFFF
-      return new String([b1, b2, b3, b4] as byte[], StandardCharsets.UTF_8)
-    }
+    // U+10000 to U+10FFFF
+    new String([b1, b2, b3, b4] as byte[], StandardCharsets.UTF_8)
   }
 
   private static lengthOfChar(b) {
@@ -238,22 +225,5 @@ class Lexer implements Iterator<Token> {
     if ((b & 0xF0) == 0xE0) return 3
     if ((b & 0xF8) == 0xF0) return 4
     -1
-  }
-
-  private readByte() {
-    if (bb) {
-      return bb.poll()
-    }
-    buffer.hasRemaining() || 0 < load() ? buffer.get() : -1
-  }
-
-  private backBytes(Object... bb) {
-    this.bb.addAll(bb)
-  }
-
-  private load() {
-    buffer.clear().with { b ->
-      channel.read(b).tap { b.flip() }
-    }
   }
 }

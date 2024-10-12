@@ -2,13 +2,12 @@
 codenarc = "3.5.0-groovy-4.0"
 groovy = "4.0.23"
 picocli = "4.7.6"
-shadow-gradle-plugin = "8.3.2"
+shadow-gradle-plugin = "8.3.3"
 spock = "2.3-groovy-4.0"
 
 [libraries]
 codenarc = { module = "org.codenarc:CodeNarc", version.ref = "codenarc" }
 groovy = { module = "org.apache.groovy:groovy", version.ref = "groovy" }
-groovy-nio = { module = "org.apache.groovy:groovy-nio", version.ref = "groovy" }
 picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
 shadow-gradle-plugin = { module = "com.gradleup.shadow:shadow-gradle-plugin", version.ref = "shadow-gradle-plugin" }
 spock-core = { module = "org.spockframework:spock-core", version.ref = "spock" }

@@ -14,8 +14,7 @@ class Parser {
   }
 
   def parse() {
-    if (tokens.hasNext()) return parseValue(tokens.next())
-    throw ParserException.unexpectedEOF()
+    tokens.hasNext() ? parseValue(tokens.next()) : null
   }
 
   private parseValue(token) {

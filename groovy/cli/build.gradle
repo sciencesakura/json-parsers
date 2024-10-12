@@ -6,7 +6,6 @@ plugins {
 
 dependencies {
   implementation project(':gjsonp-core')
-  implementation libs.groovy.nio
   implementation libs.picocli
 }
 

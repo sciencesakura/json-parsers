@@ -1,4 +1,4 @@
-rootProject.name = 'gjsonp'
+rootProject.name = 'GJson Parser'
 include('core', 'cli')
 
 project(':core').name = 'gjsonp-core'

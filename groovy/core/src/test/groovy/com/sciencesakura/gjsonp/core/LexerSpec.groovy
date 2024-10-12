@@ -2,7 +2,6 @@
 
 package com.sciencesakura.gjsonp.core
 
-import java.nio.channels.Channels
 import java.nio.charset.StandardCharsets
 import spock.lang.Specification
 
@@ -11,40 +10,40 @@ class LexerSpec extends Specification {
   def'do nothing when there is no input'() {
     given:
     def text = ''
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    def tokens = Lexer.newLexer(channel, 128).toList()
+    def tokens = new Lexer(stream).toList()
 
     then:
     assert tokens.empty
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def 'ignore whitespace characters'() {
     given:
     def text = ' \t\n\r'
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    def tokens = Lexer.newLexer(channel, 128).toList()
+    def tokens = new Lexer(stream).toList()
 
     then:
     assert tokens.empty
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def 'recognize symbols'() {
     given:
     def text = ',:[]{}'
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    def tokens = Lexer.newLexer(channel, 128).toList()
+    def tokens = new Lexer(stream).toList()
 
     then:
     assert tokens == [
@@ -57,16 +56,16 @@ class LexerSpec extends Specification {
     ]
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def 'throw exception for unknown symbol'() {
     given:
     def text = ',:[]()'
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    Lexer.newLexer(channel, 128).toList()
+    new Lexer(stream).toList()
 
     then:
     def e = thrown(ParserException)
@@ -75,16 +74,16 @@ class LexerSpec extends Specification {
     assert e.column == 5
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def 'recognize strings'() {
     given:
     def text = '"Hello" "Olá" "こんにちは" "你好" "안녕하세요" "👋👋🏻👋🏼👋🏽👋🏾👋🏿" ""'
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    def tokens = Lexer.newLexer(channel, 128).toList()
+    def tokens = new Lexer(stream).toList()
 
     then:
     assert tokens == [
@@ -98,16 +97,16 @@ class LexerSpec extends Specification {
     ]
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def 'recognize strings containing escape sequences'() {
     given:
     def text = '"\\"" "\\\\" "\\/" "\\b" "\\f" "\\n" "\\r" "\\t"'
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    def tokens = Lexer.newLexer(channel, 128).toList()
+    def tokens = new Lexer(stream).toList()
 
     then:
     assert tokens == [
@@ -122,7 +121,7 @@ class LexerSpec extends Specification {
     ]
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def 'recognize strings containing unicode sequences'() {
@@ -135,10 +134,10 @@ class LexerSpec extends Specification {
         "\\uC548\\uB155\\uD558\\uC138\\uC694"
         "\\uD83D\\uDC4B\\uD83D\\uDC4B\\uD83C\\uDFFB\\uD83D\\uDC4B\\uD83C\\uDFFC\\uD83D\\uDC4B\\uD83C\\uDFFD\\uD83D\\uDC4B\\uD83C\\uDFFE\\uD83D\\uDC4B\\uD83C\\uDFFF"
         '''.stripIndent()
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    def tokens = Lexer.newLexer(channel, 128).toList()
+    def tokens = new Lexer(stream).toList()
 
     then:
     assert tokens == [
@@ -151,7 +150,7 @@ class LexerSpec extends Specification {
     ]
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def 'recognize strings containing invalid UTF-8 byte sequence'() {
@@ -165,10 +164,10 @@ class LexerSpec extends Specification {
         0x22, 0x61, 0xF0, 0x80, 0x40, 0x80, 0x62, 0x22, 0x0A,
         0x22, 0x61, 0xF0, 0x80, 0x80, 0x40, 0x62, 0x22, 0x0A,
     ] as byte[]
-    def channel = channelFrom bytes
+    def stream = new ByteArrayInputStream(bytes)
 
     when:
-    def tokens = Lexer.newLexer(channel, 128).toList()
+    def tokens = new Lexer(stream).toList()
 
     then:
     assert tokens == [
@@ -182,16 +181,16 @@ class LexerSpec extends Specification {
     ]
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def "throw exception for unterminated string: '\"foo'"() {
     given:
     def text = '"foo'
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    Lexer.newLexer(channel, 128).toList()
+    new Lexer(stream).toList()
 
     then:
     def e = thrown(ParserException)
@@ -200,16 +199,16 @@ class LexerSpec extends Specification {
     assert e.column == 5
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def "throw exception for unterminated string: '\"'"() {
     given:
     def text = '"'
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    Lexer.newLexer(channel, 128).toList()
+    new Lexer(stream).toList()
 
     then:
     def e = thrown(ParserException)
@@ -218,16 +217,16 @@ class LexerSpec extends Specification {
     assert e.column == 2
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def 'throw exception for string containing invalid escape sequence'() {
     given:
     def text = '"\\x"'
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    Lexer.newLexer(channel, 128).toList()
+    new Lexer(stream).toList()
 
     then:
     def e = thrown(ParserException)
@@ -236,16 +235,16 @@ class LexerSpec extends Specification {
     assert e.column == 3
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def "throw exception for string containing invalid unicode sequence: '\"\\u000G\"'"() {
     given:
     def text = '"\\u000G"'
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    Lexer.newLexer(channel, 128).toList()
+    new Lexer(stream).toList()
 
     then:
     def e = thrown(ParserException)
@@ -254,16 +253,16 @@ class LexerSpec extends Specification {
     assert e.column == 7
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def "throw exception for string containing invalid unicode sequence: '\"\\u004\"'"() {
     given:
     def text = '"\\u004"'
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    Lexer.newLexer(channel, 128).toList()
+    new Lexer(stream).toList()
 
     then:
     def e = thrown(ParserException)
@@ -272,16 +271,16 @@ class LexerSpec extends Specification {
     assert e.column == 7
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def 'throw exception for string containing control character'() {
     given:
     def text = '"Hello\tWorld"'
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    Lexer.newLexer(channel, 128).toList()
+    new Lexer(stream).toList()
 
     then:
     def e = thrown(ParserException)
@@ -290,16 +289,16 @@ class LexerSpec extends Specification {
     assert e.column == 7
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def 'recognize keywords'() {
     given:
     def text = 'true false null'
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    def tokens = Lexer.newLexer(channel, 128).toList()
+    def tokens = new Lexer(stream).toList()
 
     then:
     assert tokens == [
@@ -309,16 +308,16 @@ class LexerSpec extends Specification {
     ]
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def 'throw exception for unknown keyword'() {
     given:
     def text = 'true false nil'
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    Lexer.newLexer(channel, 128).toList()
+    new Lexer(stream).toList()
 
     then:
     def e = thrown(ParserException)
@@ -327,16 +326,16 @@ class LexerSpec extends Specification {
     assert e.column == 12
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def 'recognize integer numbers'() {
     given:
     def text = '1 234 -6 -678'
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    def tokens = Lexer.newLexer(channel, 128).toList()
+    def tokens = new Lexer(stream).toList()
 
     then:
     assert tokens == [
@@ -347,16 +346,16 @@ class LexerSpec extends Specification {
     ]
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def 'recognize floating-point numbers written in decimal notation'() {
     given:
     def text = '0.1 23.45 -6.7 -89.01'
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    def tokens = Lexer.newLexer(channel, 128).toList()
+    def tokens = new Lexer(stream).toList()
 
     then:
     assert tokens == [
@@ -367,7 +366,7 @@ class LexerSpec extends Specification {
     ]
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def 'recognize floating-point numbers written in E notation'() {
@@ -378,10 +377,10 @@ class LexerSpec extends Specification {
         0.1e2 34.56e78 -9.0e1 -23.45e67
         0.1E2 34.56E78 -9.0E1 -23.45E67
         '''.stripIndent()
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    def tokens = Lexer.newLexer(channel, 128).toList()
+    def tokens = new Lexer(stream).toList()
 
     then:
     assert tokens == [
@@ -404,7 +403,7 @@ class LexerSpec extends Specification {
     ]
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def 'recognize floating-point numbers written in E notation (signed)'() {
@@ -419,10 +418,10 @@ class LexerSpec extends Specification {
         0.1e-2 34.56e-78 -9.0e-1 -23.45e-67
         0.1E-2 34.56E-78 -9.0E-1 -23.45E-67
         '''.stripIndent()
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    def tokens = Lexer.newLexer(channel, 128).toList()
+    def tokens = new Lexer(stream).toList()
 
     then:
     assert tokens == [
@@ -461,16 +460,16 @@ class LexerSpec extends Specification {
     ]
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def 'throw exception when minus sign is not followed by a digit'() {
     given:
     def text = '-'
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    Lexer.newLexer(channel, 128).toList()
+    new Lexer(stream).toList()
 
     then:
     def e = thrown(ParserException)
@@ -479,16 +478,16 @@ class LexerSpec extends Specification {
     assert e.column == 2
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def 'throw exception when decimal point is not followed by a digit'() {
     given:
     def text = '1.'
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    Lexer.newLexer(channel, 128).toList()
+    new Lexer(stream).toList()
 
     then:
     def e = thrown(ParserException)
@@ -497,16 +496,16 @@ class LexerSpec extends Specification {
     assert e.column == 3
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def "throw exception when 'e' is not followed by a digit"() {
     given:
     def text = '1e'
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    Lexer.newLexer(channel, 128).toList()
+    new Lexer(stream).toList()
 
     then:
     def e = thrown(ParserException)
@@ -515,16 +514,16 @@ class LexerSpec extends Specification {
     assert e.column == 3
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def "throw exception when 'e+' is not followed by a digit"() {
     given:
     def text = '1e+'
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    Lexer.newLexer(channel, 128).toList()
+    new Lexer(stream).toList()
 
     then:
     def e = thrown(ParserException)
@@ -533,16 +532,16 @@ class LexerSpec extends Specification {
     assert e.column == 4
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
   def "throw exception when 'e-' is not followed by a digit"() {
     given:
     def text = '1e-'
-    def channel = channelFrom text
+    def stream = newInputStream(text)
 
     when:
-    Lexer.newLexer(channel, 128).toList()
+    new Lexer(stream).toList()
 
     then:
     def e = thrown(ParserException)
@@ -551,14 +550,10 @@ class LexerSpec extends Specification {
     assert e.column == 4
 
     cleanup:
-    channel?.close()
+    stream?.close()
   }
 
-  private static channelFrom(String s) {
-    channelFrom(s.getBytes(StandardCharsets.UTF_8))
-  }
-
-  private static channelFrom(byte[] bytes) {
-    Channels.newChannel(new ByteArrayInputStream(bytes))
+  private static newInputStream(String s) {
+    new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8))
   }
 }

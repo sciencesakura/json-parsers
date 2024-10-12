@@ -11,7 +11,7 @@ class GJsonSpec extends Specification {
     def input = getClass().getResourceAsStream('/array-01.json')
 
     expect:
-    assert GJson.parse(input, 1024) == [
+    assert GJson.parse(input) == [
         null,
         true,
         false,
@@ -49,7 +49,7 @@ class GJsonSpec extends Specification {
     def input = getClass().getResourceAsStream('/object-01.json')
 
     expect:
-    assert GJson.parse(input, 1024) == [
+    assert GJson.parse(input) == [
         a: null,
         b: true,
         c: false,

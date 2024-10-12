@@ -2,8 +2,6 @@
 
 package com.sciencesakura.gjsonp.core
 
-import java.nio.channels.Channels
-import java.nio.channels.ReadableByteChannel
 import java.nio.charset.StandardCharsets
 
 /**
@@ -15,25 +13,13 @@ final class GJson {
   }
 
   /**
-   * Parses JSON from the given channel.
-   *
-   * @param channel the channel to read JSON from.
-   * @param bufferSize the buffer size in bytes.
-   * @return the deserialized object.
-   */
-  static parse(ReadableByteChannel channel, int bufferSize) {
-    new Parser(Lexer.newLexer(channel, bufferSize)).parse()
-  }
-
-  /**
    * Parses JSON from the given input stream.
    *
    * @param stream the input stream to read JSON from.
-   * @param bufferSize the buffer size in bytes.
    * @return the deserialized object.
    */
-  static parse(InputStream stream, int bufferSize) {
-    parse(Channels.newChannel(stream), bufferSize)
+  static parse(InputStream stream) {
+    new Parser(new Lexer(stream)).parse()
   }
 
   /**
@@ -43,6 +29,6 @@ final class GJson {
    * @return the deserialized object.
    */
   static parse(CharSequence str) {
-    parse(new ByteArrayInputStream(str.toString().getBytes(StandardCharsets.UTF_8)), str.length())
+    parse(new ByteArrayInputStream(str.toString().getBytes(StandardCharsets.UTF_8)))
   }
 }

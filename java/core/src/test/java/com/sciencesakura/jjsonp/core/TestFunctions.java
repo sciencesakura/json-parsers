@@ -2,6 +2,10 @@
 
 package com.sciencesakura.jjsonp.core;
 
+import java.io.ByteArrayInputStream;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -13,6 +17,22 @@ import java.util.SequencedMap;
 final class TestFunctions {
 
   private TestFunctions() {
+  }
+
+  static ReadableByteChannel newChannel(String input) {
+    return newChannel(input.getBytes(StandardCharsets.UTF_8));
+  }
+
+  static ReadableByteChannel newChannel(int... bytes) {
+    var bb = new byte[bytes.length];
+    for (var i = 0; i < bytes.length; i++) {
+      bb[i] = (byte) bytes[i];
+    }
+    return newChannel(bb);
+  }
+
+  static ReadableByteChannel newChannel(byte... bytes) {
+    return Channels.newChannel(new ByteArrayInputStream(bytes));
   }
 
   static <K, V> SequencedMap<K, V> sequencedMapOf(K k1, V v1) {

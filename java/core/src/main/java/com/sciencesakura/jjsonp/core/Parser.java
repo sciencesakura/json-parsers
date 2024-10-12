@@ -9,7 +9,7 @@ import java.util.Optional;
 
 final class Parser {
 
-  private final Iterator<?  extends Token> tokens;
+  private final Iterator<? extends Token> tokens;
 
   Parser(Iterator<? extends Token> tokens) {
     this.tokens = tokens;

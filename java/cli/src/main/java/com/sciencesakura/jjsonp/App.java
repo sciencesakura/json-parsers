@@ -32,6 +32,11 @@ public final class App implements Callable<Integer> {
   @Parameters(description = "JSON files to process.", paramLabel = "FILE")
   private List<Path> files;
 
+  /**
+   * The entry point of the CLI application.
+   *
+   * @param args the command-line arguments.
+   */
   public static void main(String[] args) {
     System.exit(new CommandLine(new App()).execute(args));
   }

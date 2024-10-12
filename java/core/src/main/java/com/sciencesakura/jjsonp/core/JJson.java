@@ -3,6 +3,7 @@
 package com.sciencesakura.jjsonp.core;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -24,10 +25,11 @@ public final class JJson {
    * @param channel    the channel to read JSON from.
    * @param bufferSize the buffer size in bytes.
    * @return the parsed JSON value, or {@link Optional#empty()} if the input is empty.
+   * @throws IOException if an I/O error occurs.
    */
   @NonNull
-  public static Optional<JsonValue> parse(@NonNull ReadableByteChannel channel, int bufferSize) {
-    return new Parser(Lexer.newLexer(channel, bufferSize)).parse();
+  public static Optional<JsonValue> parse(@NonNull ReadableByteChannel channel, int bufferSize) throws IOException {
+    return new Parser(new Lexer(channel, bufferSize)).parse();
   }
 
   /**
@@ -36,9 +38,10 @@ public final class JJson {
    * @param stream     the input stream to read JSON from.
    * @param bufferSize the buffer size in bytes.
    * @return the parsed JSON value, or {@link Optional#empty()} if the input is empty.
+   * @throws IOException if an I/O error occurs.
    */
   @NonNull
-  public static Optional<JsonValue> parse(@NonNull InputStream stream, int bufferSize) {
+  public static Optional<JsonValue> parse(@NonNull InputStream stream, int bufferSize) throws IOException {
     return parse(Channels.newChannel(stream), bufferSize);
   }
 
@@ -47,9 +50,10 @@ public final class JJson {
    *
    * @param bytes the byte array to read JSON from.
    * @return the parsed JSON value, or {@link Optional#empty()} if the input is empty.
+   * @throws IOException if an I/O error occurs.
    */
   @NonNull
-  public static Optional<JsonValue> parse(byte @NonNull [] bytes) {
+  public static Optional<JsonValue> parse(byte @NonNull [] bytes) throws IOException {
     return parse(new ByteArrayInputStream(bytes), bytes.length);
   }
 
@@ -58,9 +62,10 @@ public final class JJson {
    *
    * @param jsonString the JSON string.
    * @return the parsed JSON value, or {@link Optional#empty()} if the input is empty.
+   * @throws IOException if an I/O error occurs.
    */
   @NonNull
-  public static Optional<JsonValue> parse(@NonNull CharSequence jsonString) {
+  public static Optional<JsonValue> parse(@NonNull CharSequence jsonString) throws IOException {
     return parse(jsonString.toString().getBytes(StandardCharsets.UTF_8));
   }
 }

@@ -2,16 +2,13 @@
 
 package com.sciencesakura.jjsonp.core;
 
+import static com.sciencesakura.jjsonp.core.TestFunctions.newChannel;
 import static com.sciencesakura.jjsonp.core.TestFunctions.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.InstanceOfAssertFactories.throwable;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EmptySource;
@@ -23,8 +20,8 @@ class LexerTest {
   @EmptySource
   @ValueSource(strings = {" ", "\t", "\n", "\r", " \t\n\r"})
   void ignoreBlanks(String input) throws IOException {
-    try (var ch = channelFrom(input)) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel(input)) {
+      var lexer = new Lexer(ch, 128);
       var actual = toList(lexer);
       assertThat(actual).isEmpty();
     }
@@ -33,8 +30,8 @@ class LexerTest {
   @Test
   void recognizeSymbols() throws IOException {
     var input = "[]{}:,";
-    try (var ch = channelFrom(input)) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel(input)) {
+      var lexer = new Lexer(ch, 128);
       var actual = toList(lexer);
       assertThat(actual).containsExactly(
           new Token.LeftBracket(1, 1),
@@ -50,8 +47,8 @@ class LexerTest {
   @Test
   void throwExceptionForUnknownSymbol() throws IOException {
     var input = "[]();,";
-    try (var ch = channelFrom(input)) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel(input)) {
+      var lexer = new Lexer(ch, 128);
       assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
             assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_CHARACTER);
@@ -64,8 +61,8 @@ class LexerTest {
   @Test
   void recognizeKeywords() throws IOException {
     var input = "true false null";
-    try (var ch = channelFrom(input)) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel(input)) {
+      var lexer = new Lexer(ch, 128);
       var actual = toList(lexer);
       assertThat(actual).containsExactly(
           new Token.True(1, 1),
@@ -78,8 +75,8 @@ class LexerTest {
   @Test
   void throwExceptionForUnknownKeyword() throws IOException {
     var input = "true false nil";
-    try (var ch = channelFrom(input)) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel(input)) {
+      var lexer = new Lexer(ch, 128);
       assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
             assertThat(e.getType()).isEqualTo(ParserException.Type.UNKNOWN_TOKEN);
@@ -94,8 +91,8 @@ class LexerTest {
     var input = """
         "Hello" "Olá" "こんにちは" "你好" "안녕하세요" "👋👋🏻👋🏼👋🏽👋🏾👋🏿" ""
         """;
-    try (var ch = channelFrom(input)) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel(input)) {
+      var lexer = new Lexer(ch, 128);
       var actual = toList(lexer);
       assertThat(actual).containsExactly(
           new Token.String(1, 1, "Hello"),
@@ -114,8 +111,8 @@ class LexerTest {
     var input = """
         "\\"" "\\\\" "\\/" "\\b" "\\f" "\\n" "\\r" "\\t"
         """;
-    try (var ch = channelFrom(input)) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel(input)) {
+      var lexer = new Lexer(ch, 128);
       var actual = toList(lexer);
       assertThat(actual).containsExactly(
           new Token.String(1, 1, "\""),
@@ -140,8 +137,8 @@ class LexerTest {
         "\\uC548\\uB155\\uD558\\uC138\\uC694"
         "\\uD83D\\uDC4B\\uD83D\\uDC4B\\uD83C\\uDFFB\\uD83D\\uDC4B\\uD83C\\uDFFC\\uD83D\\uDC4B\\uD83C\\uDFFD\\uD83D\\uDC4B\\uD83C\\uDFFE\\uD83D\\uDC4B\\uD83C\\uDFFF"
         """;
-    try (var ch = channelFrom(input)) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel(input)) {
+      var lexer = new Lexer(ch, 128);
       var actual = toList(lexer);
       assertThat(actual).containsExactly(
           new Token.String(1, 1, "Hello"),
@@ -165,8 +162,8 @@ class LexerTest {
         0x22, 0x61, 0xF0, 0x80, 0x40, 0x80, 0x62, 0x22, 0x0A,
         0x22, 0x61, 0xF0, 0x80, 0x80, 0x40, 0x62, 0x22, 0x0A,
     };
-    try (var ch = channelFrom(input)) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = TestFunctions.newChannel(input)) {
+      var lexer = new Lexer(ch, 128);
       var actual = toList(lexer);
       assertThat(actual).containsExactly(
           new Token.String(1, 1, "a�b"),
@@ -183,8 +180,8 @@ class LexerTest {
   @Test
   void throwExceptionForUnterminatedString_1() throws IOException {
     var input = "\"";
-    try (var ch = channelFrom(input)) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel(input)) {
+      var lexer = new Lexer(ch, 128);
       assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
             assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF);
@@ -197,8 +194,8 @@ class LexerTest {
   @Test
   void throwExceptionForUnterminatedString_2() throws IOException {
     var input = "\"foo";
-    try (var ch = channelFrom(input)) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel(input)) {
+      var lexer = new Lexer(ch, 128);
       assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
             assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF);
@@ -213,8 +210,8 @@ class LexerTest {
     var input = """
         "Hello\tWorld"
         """;
-    try (var ch = channelFrom(input)) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel(input)) {
+      var lexer = new Lexer(ch, 128);
       assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
             assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_CHARACTER);
@@ -229,8 +226,8 @@ class LexerTest {
     var input = """
         "\\x"
         """;
-    try (var ch = channelFrom(input)) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel(input)) {
+      var lexer = new Lexer(ch, 128);
       assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
             assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_CHARACTER);
@@ -245,8 +242,8 @@ class LexerTest {
     var input = """
         "\\u000G"
         """;
-    try (var ch = channelFrom(input)) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel(input)) {
+      var lexer = new Lexer(ch, 128);
       assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
             assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_CHARACTER);
@@ -261,8 +258,8 @@ class LexerTest {
     var input = """
         "\\u001"
         """;
-    try (var ch = channelFrom(input)) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel(input)) {
+      var lexer = new Lexer(ch, 128);
       assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
             assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_CHARACTER);
@@ -275,8 +272,8 @@ class LexerTest {
   @ParameterizedTest
   @ValueSource(strings = {"1", "234", "-5", "-678"})
   void recognizeIntegerNumbers(String input) throws IOException {
-    try (var ch = channelFrom(input)) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel(input)) {
+      var lexer = new Lexer(ch, 128);
       var actual = toList(lexer);
       assertThat(actual).containsExactly(
           new Token.Integer(1, 1, Long.parseLong(input))
@@ -287,8 +284,8 @@ class LexerTest {
   @ParameterizedTest
   @ValueSource(strings = {"0.1", "23.45", "-6.7", "-89.01"})
   void recognizeFloatingPointNumbersWrittenInDecimalNotation(String input) throws IOException {
-    try (var ch = channelFrom(input)) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel(input)) {
+      var lexer = new Lexer(ch, 128);
       var actual = toList(lexer);
       assertThat(actual).containsExactly(
           new Token.Float(1, 1, Double.parseDouble(input))
@@ -304,8 +301,8 @@ class LexerTest {
       "0.1E2", "34.56E78", "-9.0E1", "-23.45E67",
   })
   void recognizeFloatingPointNumbersWrittenInENotation(String input) throws IOException {
-    try (var ch = channelFrom(input)) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel(input)) {
+      var lexer = new Lexer(ch, 128);
       var actual = toList(lexer);
       assertThat(actual).containsExactly(
           new Token.Float(1, 1, Double.parseDouble(input))
@@ -325,8 +322,8 @@ class LexerTest {
       "0.1E-2", "34.56E-78", "-9.0E-1", "-23.45E-67"
   })
   void recognizeFloatingPointNumbersWrittenInSignedENotation(String input) throws IOException {
-    try (var ch = channelFrom(input)) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel(input)) {
+      var lexer = new Lexer(ch, 128);
       var actual = toList(lexer);
       assertThat(actual).containsExactly(
           new Token.Float(1, 1, Double.parseDouble(input))
@@ -336,8 +333,8 @@ class LexerTest {
 
   @Test
   void throwExceptionWhenMinusSignIsNotFollowedByDigit() throws IOException {
-    try (var ch = channelFrom("-")) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel("-")) {
+      var lexer = new Lexer(ch, 128);
       assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
             assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF);
@@ -349,8 +346,8 @@ class LexerTest {
 
   @Test
   void throwExceptionWhenDecimalPointIsNotFollowedByDigit() throws IOException {
-    try (var ch = channelFrom("0.")) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel("0.")) {
+      var lexer = new Lexer(ch, 128);
       assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
             assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF);
@@ -362,8 +359,8 @@ class LexerTest {
 
   @Test
   void throwExceptionWhenEIsNotFollowedByDigit() throws IOException {
-    try (var ch = channelFrom("0e")) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel("0e")) {
+      var lexer = new Lexer(ch, 128);
       assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
             assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF);
@@ -375,8 +372,8 @@ class LexerTest {
 
   @Test
   void throwExceptionWhenSignedEIsNotFollowedByDigit() throws IOException {
-    try (var ch = channelFrom("0e+")) {
-      var lexer = Lexer.newLexer(ch, 128);
+    try (var ch = newChannel("0e+")) {
+      var lexer = new Lexer(ch, 128);
       assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
             assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF);
@@ -384,21 +381,5 @@ class LexerTest {
             assertThat(e.getColumn()).isEqualTo(4);
           });
     }
-  }
-
-  private static ReadableByteChannel channelFrom(String input) {
-    return channelFrom(input.getBytes(StandardCharsets.UTF_8));
-  }
-
-  private static ReadableByteChannel channelFrom(int[] input) {
-    var bytes = new byte[input.length];
-    for (var i = 0; i < input.length; i++) {
-      bytes[i] = (byte) input[i];
-    }
-    return channelFrom(bytes);
-  }
-
-  private static ReadableByteChannel channelFrom(byte[] input) {
-    return Channels.newChannel(new ByteArrayInputStream(input));
   }
 }

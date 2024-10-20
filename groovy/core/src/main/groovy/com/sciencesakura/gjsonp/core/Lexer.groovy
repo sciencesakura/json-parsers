@@ -195,7 +195,7 @@ class Lexer implements Iterator<Token> {
     }
     if (length == 2) {
       // U+0080 to U+07FF
-      return new String([b1, b2] as byte[], StandardCharsets.UTF_8)
+      return ((b1 & 0x1F) << 6 | b2 & 0x3F) as char
     }
     def b3 = source.read()
     if ((b3 & 0xC0) != 0x80) {
@@ -206,7 +206,7 @@ class Lexer implements Iterator<Token> {
     }
     if (length == 3) {
       // U+0800 to U+FFFF
-      return new String([b1, b2, b3] as byte[], StandardCharsets.UTF_8)
+      return ((b1 & 0x0F) << 12 | (b2 & 0x3F) << 6 | b3 & 0x3F) as char
     }
     def b4 = source.read()
     if ((b4 & 0xC0) != 0x80) {

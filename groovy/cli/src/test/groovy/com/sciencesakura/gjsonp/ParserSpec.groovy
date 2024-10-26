@@ -109,7 +109,8 @@ class ParserSpec extends Specification {
     new Parser(expression).toList()
 
     then:
-    thrown(InvalidExpressionException)
+    def e = thrown(InvalidExpressionException)
+    assert e.message == "Unexpected token 'String' at 1"
   }
 
   def "throw exception for invalid expression: '.[1]'"() {
@@ -120,7 +121,8 @@ class ParserSpec extends Specification {
     new Parser(expression).toList()
 
     then:
-    thrown(InvalidExpressionException)
+    def e = thrown(InvalidExpressionException)
+    assert e.message == "Unexpected token 'LeftBracket' at 2"
   }
 
   def "throw exception for invalid expression: '[.]'"() {
@@ -131,7 +133,8 @@ class ParserSpec extends Specification {
     new Parser(expression).toList()
 
     then:
-    thrown(InvalidExpressionException)
+    def e = thrown(InvalidExpressionException)
+    assert e.message == "Unexpected token 'Period' at 2"
   }
 
   def "throw exception for invalid expression: '[foo.bar]'"() {
@@ -142,7 +145,8 @@ class ParserSpec extends Specification {
     new Parser(expression).toList()
 
     then:
-    thrown(InvalidExpressionException)
+    def e = thrown(InvalidExpressionException)
+    assert e.message == "Unexpected token 'Period' at 5"
   }
 
   def "throw exception for invalid expression: '.'"() {
@@ -153,6 +157,7 @@ class ParserSpec extends Specification {
     new Parser(expression).toList()
 
     then:
-    thrown(InvalidExpressionException)
+    def e = thrown(InvalidExpressionException)
+    assert e.message == 'Unexpected end of expression at 1'
   }
 }

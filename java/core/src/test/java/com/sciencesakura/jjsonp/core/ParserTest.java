@@ -103,8 +103,7 @@ class ParserTest {
     // [
     var tokens = List.of(new Token.LeftBracket(0, 0));
     var parser = new Parser(tokens.iterator());
-    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
-        .satisfies(e -> assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF));
+    assertThatThrownBy(parser::parse).hasMessage("Unexpected end of input");
   }
 
   @Test
@@ -115,8 +114,7 @@ class ParserTest {
         new Token.String(0, 0, "foo")
     );
     var parser = new Parser(tokens.iterator());
-    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
-        .satisfies(e -> assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF));
+    assertThatThrownBy(parser::parse).hasMessage("Unexpected end of input");
   }
 
   @Test
@@ -128,8 +126,7 @@ class ParserTest {
         new Token.Comma(0, 0)
     );
     var parser = new Parser(tokens.iterator());
-    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
-        .satisfies(e -> assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF));
+    assertThatThrownBy(parser::parse).hasMessage("Unexpected end of input");
   }
 
   @Test
@@ -141,9 +138,9 @@ class ParserTest {
         new Token.RightBracket(5, 6)
     );
     var parser = new Parser(tokens.iterator());
-    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
+    assertThatThrownBy(parser::parse).hasMessage("Unexpected token 'Comma' at 3:4")
+        .asInstanceOf(throwable(ParserException.class))
         .satisfies(e -> {
-          assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_TOKEN);
           assertThat(e.getLine()).isEqualTo(3);
           assertThat(e.getColumn()).isEqualTo(4);
         });
@@ -160,9 +157,9 @@ class ParserTest {
         new Token.RightBracket(9, 10)
     );
     var parser = new Parser(tokens.iterator());
-    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
+    assertThatThrownBy(parser::parse).hasMessage("Unexpected token 'Comma' at 7:8")
+        .asInstanceOf(throwable(ParserException.class))
         .satisfies(e -> {
-          assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_TOKEN);
           assertThat(e.getLine()).isEqualTo(7);
           assertThat(e.getColumn()).isEqualTo(8);
         });
@@ -178,9 +175,9 @@ class ParserTest {
         new Token.RightBracket(7, 8)
     );
     var parser = new Parser(tokens.iterator());
-    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
+    assertThatThrownBy(parser::parse).hasMessage("Unexpected token 'String' at 5:6")
+        .asInstanceOf(throwable(ParserException.class))
         .satisfies(e -> {
-          assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_TOKEN);
           assertThat(e.getLine()).isEqualTo(5);
           assertThat(e.getColumn()).isEqualTo(6);
         });
@@ -234,8 +231,7 @@ class ParserTest {
     // {
     var tokens = List.of(new Token.LeftCurly(0, 0));
     var parser = new Parser(tokens.iterator());
-    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
-        .satisfies(e -> assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF));
+    assertThatThrownBy(parser::parse).hasMessage("Unexpected end of input");
   }
 
   @Test
@@ -246,8 +242,7 @@ class ParserTest {
         new Token.String(0, 0, "foo")
     );
     var parser = new Parser(tokens.iterator());
-    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
-        .satisfies(e -> assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF));
+    assertThatThrownBy(parser::parse).hasMessage("Unexpected end of input");
   }
 
   @Test
@@ -259,8 +254,7 @@ class ParserTest {
         new Token.Colon(0, 0)
     );
     var parser = new Parser(tokens.iterator());
-    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
-        .satisfies(e -> assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF));
+    assertThatThrownBy(parser::parse).hasMessage("Unexpected end of input");
   }
 
   @Test
@@ -273,8 +267,7 @@ class ParserTest {
         new Token.String(0, 0, "bar")
     );
     var parser = new Parser(tokens.iterator());
-    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
-        .satisfies(e -> assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF));
+    assertThatThrownBy(parser::parse).hasMessage("Unexpected end of input");
   }
 
   @Test
@@ -288,22 +281,21 @@ class ParserTest {
         new Token.Comma(0, 0)
     );
     var parser = new Parser(tokens.iterator());
-    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
-        .satisfies(e -> assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF));
+    assertThatThrownBy(parser::parse).hasMessage("Unexpected end of input");
   }
 
   @Test
   void throwExceptionForInvalidSequenceOfTokens_2_1() {
-    // {,}
+    // {:}
     var tokens = List.of(
         new Token.LeftCurly(1, 2),
         new Token.Colon(3, 4),
         new Token.RightCurly(5, 6)
     );
     var parser = new Parser(tokens.iterator());
-    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
+    assertThatThrownBy(parser::parse).hasMessage("Unexpected token 'Colon' at 3:4")
+        .asInstanceOf(throwable(ParserException.class))
         .satisfies(e -> {
-          assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_TOKEN);
           assertThat(e.getLine()).isEqualTo(3);
           assertThat(e.getColumn()).isEqualTo(4);
         });
@@ -318,9 +310,9 @@ class ParserTest {
         new Token.RightCurly(5, 6)
     );
     var parser = new Parser(tokens.iterator());
-    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
+    assertThatThrownBy(parser::parse).hasMessage("Unexpected token 'RightCurly' at 5:6")
+        .asInstanceOf(throwable(ParserException.class))
         .satisfies(e -> {
-          assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_TOKEN);
           assertThat(e.getLine()).isEqualTo(5);
           assertThat(e.getColumn()).isEqualTo(6);
         });
@@ -337,9 +329,9 @@ class ParserTest {
         new Token.RightCurly(9, 10)
     );
     var parser = new Parser(tokens.iterator());
-    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
+    assertThatThrownBy(parser::parse).hasMessage("Unexpected token 'Colon' at 7:8")
+        .asInstanceOf(throwable(ParserException.class))
         .satisfies(e -> {
-          assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_TOKEN);
           assertThat(e.getLine()).isEqualTo(7);
           assertThat(e.getColumn()).isEqualTo(8);
         });
@@ -355,9 +347,9 @@ class ParserTest {
         new Token.RightCurly(7, 8)
     );
     var parser = new Parser(tokens.iterator());
-    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
+    assertThatThrownBy(parser::parse).hasMessage("Unexpected token 'String' at 5:6")
+        .asInstanceOf(throwable(ParserException.class))
         .satisfies(e -> {
-          assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_TOKEN);
           assertThat(e.getLine()).isEqualTo(5);
           assertThat(e.getColumn()).isEqualTo(6);
         });
@@ -375,9 +367,9 @@ class ParserTest {
         new Token.RightCurly(11, 12)
     );
     var parser = new Parser(tokens.iterator());
-    assertThatThrownBy(parser::parse).asInstanceOf(throwable(ParserException.class))
+    assertThatThrownBy(parser::parse).hasMessage("Unexpected token 'RightCurly' at 11:12")
+        .asInstanceOf(throwable(ParserException.class))
         .satisfies(e -> {
-          assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_TOKEN);
           assertThat(e.getLine()).isEqualTo(11);
           assertThat(e.getColumn()).isEqualTo(12);
         });

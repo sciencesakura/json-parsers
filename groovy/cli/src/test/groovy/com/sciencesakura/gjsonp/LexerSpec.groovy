@@ -112,7 +112,8 @@ class LexerSpec extends Specification {
     new Lexer(text).toList()
 
     then:
-    thrown(InvalidExpressionException)
+    def e = thrown(InvalidExpressionException)
+    assert e.message == 'Unterminated string at 4'
   }
 
   def "throw exception for unterminated string: '\"'"() {
@@ -123,6 +124,7 @@ class LexerSpec extends Specification {
     new Lexer(text).toList()
 
     then:
-    thrown(InvalidExpressionException)
+    def e = thrown(InvalidExpressionException)
+    assert e.message == 'Unterminated string at 1'
   }
 }

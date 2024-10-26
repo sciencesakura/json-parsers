@@ -12,6 +12,6 @@ class InvalidExpressionException extends RuntimeException {
   }
 
   static InvalidExpressionException unexpectedToken(Token token) {
-    new InvalidExpressionException("Unexpected token: $token at ${token.pos()}")
+    new InvalidExpressionException("Unexpected token '${token.class.simpleName}' at ${token.pos()}")
   }
 }

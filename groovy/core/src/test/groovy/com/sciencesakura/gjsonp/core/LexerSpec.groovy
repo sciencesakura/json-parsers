@@ -69,7 +69,7 @@ class LexerSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_CHARACTER
+    assert e.message == "Unexpected character '(' at 1:5"
     assert e.line == 1
     assert e.column == 5
 
@@ -194,7 +194,7 @@ class LexerSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_EOF
+    assert e.message == 'Unexpected end of input at 1:5'
     assert e.line == 1
     assert e.column == 5
 
@@ -212,7 +212,7 @@ class LexerSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_EOF
+    assert e.message == 'Unexpected end of input at 1:2'
     assert e.line == 1
     assert e.column == 2
 
@@ -230,7 +230,7 @@ class LexerSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_CHARACTER
+    assert e.message == "Unexpected character 'x' at 1:3"
     assert e.line == 1
     assert e.column == 3
 
@@ -248,7 +248,7 @@ class LexerSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_CHARACTER
+    assert e.message == "Unexpected character 'G' at 1:7"
     assert e.line == 1
     assert e.column == 7
 
@@ -266,7 +266,7 @@ class LexerSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_CHARACTER
+    assert e.message == "Unexpected character '\"' at 1:7"
     assert e.line == 1
     assert e.column == 7
 
@@ -284,7 +284,7 @@ class LexerSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_CHARACTER
+    assert e.message == "Unexpected character 'U+0009' at 1:7"
     assert e.line == 1
     assert e.column == 7
 
@@ -321,7 +321,7 @@ class LexerSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNKNOWN_TOKEN
+    assert e.message == "Unknown token 'nil' at 1:12"
     assert e.line == 1
     assert e.column == 12
 
@@ -473,7 +473,7 @@ class LexerSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_EOF
+    assert e.message == 'Unexpected end of input at 1:2'
     assert e.line == 1
     assert e.column == 2
 
@@ -491,7 +491,7 @@ class LexerSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_EOF
+    assert e.message == 'Unexpected end of input at 1:3'
     assert e.line == 1
     assert e.column == 3
 
@@ -509,7 +509,7 @@ class LexerSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_EOF
+    assert e.message == 'Unexpected end of input at 1:3'
     assert e.line == 1
     assert e.column == 3
 
@@ -527,7 +527,7 @@ class LexerSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_EOF
+    assert e.message == 'Unexpected end of input at 1:4'
     assert e.line == 1
     assert e.column == 4
 
@@ -545,7 +545,7 @@ class LexerSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_EOF
+    assert e.message == 'Unexpected end of input at 1:4'
     assert e.line == 1
     assert e.column == 4
 

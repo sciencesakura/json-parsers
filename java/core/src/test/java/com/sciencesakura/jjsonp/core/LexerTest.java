@@ -49,9 +49,9 @@ class LexerTest {
     var input = "[]();,";
     try (var ch = newChannel(input)) {
       var lexer = new Lexer(ch, 128);
-      assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
+      assertThatThrownBy(() -> toList(lexer)).hasMessage("Unexpected character '(' at 1:3")
+          .asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
-            assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_CHARACTER);
             assertThat(e.getLine()).isEqualTo(1);
             assertThat(e.getColumn()).isEqualTo(3);
           });
@@ -77,9 +77,9 @@ class LexerTest {
     var input = "true false nil";
     try (var ch = newChannel(input)) {
       var lexer = new Lexer(ch, 128);
-      assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
+      assertThatThrownBy(() -> toList(lexer)).hasMessage("Unknown token 'nil' at 1:12")
+          .asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
-            assertThat(e.getType()).isEqualTo(ParserException.Type.UNKNOWN_TOKEN);
             assertThat(e.getLine()).isEqualTo(1);
             assertThat(e.getColumn()).isEqualTo(12);
           });
@@ -182,9 +182,9 @@ class LexerTest {
     var input = "\"";
     try (var ch = newChannel(input)) {
       var lexer = new Lexer(ch, 128);
-      assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
+      assertThatThrownBy(() -> toList(lexer)).hasMessage("Unexpected end of input at 1:2")
+          .asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
-            assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF);
             assertThat(e.getLine()).isEqualTo(1);
             assertThat(e.getColumn()).isEqualTo(2);
           });
@@ -196,9 +196,9 @@ class LexerTest {
     var input = "\"foo";
     try (var ch = newChannel(input)) {
       var lexer = new Lexer(ch, 128);
-      assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
+      assertThatThrownBy(() -> toList(lexer)).hasMessage("Unexpected end of input at 1:5")
+          .asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
-            assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF);
             assertThat(e.getLine()).isEqualTo(1);
             assertThat(e.getColumn()).isEqualTo(5);
           });
@@ -212,9 +212,9 @@ class LexerTest {
         """;
     try (var ch = newChannel(input)) {
       var lexer = new Lexer(ch, 128);
-      assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
+      assertThatThrownBy(() -> toList(lexer)).hasMessage("Unexpected character 'U+0009' at 1:7")
+          .asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
-            assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_CHARACTER);
             assertThat(e.getLine()).isEqualTo(1);
             assertThat(e.getColumn()).isEqualTo(7);
           });
@@ -228,9 +228,9 @@ class LexerTest {
         """;
     try (var ch = newChannel(input)) {
       var lexer = new Lexer(ch, 128);
-      assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
+      assertThatThrownBy(() -> toList(lexer)).hasMessage("Unexpected character 'x' at 1:3")
+          .asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
-            assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_CHARACTER);
             assertThat(e.getLine()).isEqualTo(1);
             assertThat(e.getColumn()).isEqualTo(3);
           });
@@ -244,9 +244,9 @@ class LexerTest {
         """;
     try (var ch = newChannel(input)) {
       var lexer = new Lexer(ch, 128);
-      assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
+      assertThatThrownBy(() -> toList(lexer)).hasMessage("Unexpected character 'G' at 1:7")
+          .asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
-            assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_CHARACTER);
             assertThat(e.getLine()).isEqualTo(1);
             assertThat(e.getColumn()).isEqualTo(7);
           });
@@ -260,9 +260,9 @@ class LexerTest {
         """;
     try (var ch = newChannel(input)) {
       var lexer = new Lexer(ch, 128);
-      assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
+      assertThatThrownBy(() -> toList(lexer)).hasMessage("Unexpected character '\"' at 1:7")
+          .asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
-            assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_CHARACTER);
             assertThat(e.getLine()).isEqualTo(1);
             assertThat(e.getColumn()).isEqualTo(7);
           });
@@ -335,9 +335,9 @@ class LexerTest {
   void throwExceptionWhenMinusSignIsNotFollowedByDigit() throws IOException {
     try (var ch = newChannel("-")) {
       var lexer = new Lexer(ch, 128);
-      assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
+      assertThatThrownBy(() -> toList(lexer)).hasMessage("Unexpected end of input at 1:2")
+          .asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
-            assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF);
             assertThat(e.getLine()).isEqualTo(1);
             assertThat(e.getColumn()).isEqualTo(2);
           });
@@ -348,9 +348,9 @@ class LexerTest {
   void throwExceptionWhenDecimalPointIsNotFollowedByDigit() throws IOException {
     try (var ch = newChannel("0.")) {
       var lexer = new Lexer(ch, 128);
-      assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
+      assertThatThrownBy(() -> toList(lexer)).hasMessage("Unexpected end of input at 1:3")
+          .asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
-            assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF);
             assertThat(e.getLine()).isEqualTo(1);
             assertThat(e.getColumn()).isEqualTo(3);
           });
@@ -361,9 +361,9 @@ class LexerTest {
   void throwExceptionWhenEIsNotFollowedByDigit() throws IOException {
     try (var ch = newChannel("0e")) {
       var lexer = new Lexer(ch, 128);
-      assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
+      assertThatThrownBy(() -> toList(lexer)).hasMessage("Unexpected end of input at 1:3")
+          .asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
-            assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF);
             assertThat(e.getLine()).isEqualTo(1);
             assertThat(e.getColumn()).isEqualTo(3);
           });
@@ -374,9 +374,9 @@ class LexerTest {
   void throwExceptionWhenSignedEIsNotFollowedByDigit() throws IOException {
     try (var ch = newChannel("0e+")) {
       var lexer = new Lexer(ch, 128);
-      assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(ParserException.class))
+      assertThatThrownBy(() -> toList(lexer)).hasMessage("Unexpected end of input at 1:4")
+          .asInstanceOf(throwable(ParserException.class))
           .satisfies(e -> {
-            assertThat(e.getType()).isEqualTo(ParserException.Type.UNEXPECTED_EOF);
             assertThat(e.getLine()).isEqualTo(1);
             assertThat(e.getColumn()).isEqualTo(4);
           });

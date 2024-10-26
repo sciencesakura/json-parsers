@@ -9,6 +9,7 @@ import groovy.transform.PackageScope
 sealed interface Instruction permits GetElement {
 
   @ImmutableOptions(knownImmutables = 'index')
-  record GetElement(def index) implements Instruction {
+  @PackageScope
+  record GetElement(index) implements Instruction {
   }
 }

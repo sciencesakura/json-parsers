@@ -114,35 +114,40 @@ class ParserTest {
   @Test
   void throwExceptionForInvalidExpression_1() {
     var input = "foo";
-    assertThatThrownBy(() -> Parser.parse(input)).asInstanceOf(throwable(InvalidExpressionException.class))
+    assertThatThrownBy(() -> Parser.parse(input)).hasMessage("Unexpected token: 'String' at 1")
+        .asInstanceOf(throwable(InvalidExpressionException.class))
         .satisfies(e -> assertThat(e.getPos()).isEqualTo(1));
   }
 
   @Test
   void throwExceptionForInvalidExpression_2() {
     var input = ".[1]";
-    assertThatThrownBy(() -> Parser.parse(input)).asInstanceOf(throwable(InvalidExpressionException.class))
+    assertThatThrownBy(() -> Parser.parse(input)).hasMessage("Unexpected token: 'LeftBracket' at 2")
+        .asInstanceOf(throwable(InvalidExpressionException.class))
         .satisfies(e -> assertThat(e.getPos()).isEqualTo(2));
   }
 
   @Test
   void throwExceptionForInvalidExpression_3() {
     var input = "[.]";
-    assertThatThrownBy(() -> Parser.parse(input)).asInstanceOf(throwable(InvalidExpressionException.class))
+    assertThatThrownBy(() -> Parser.parse(input)).hasMessage("Unexpected token: 'Period' at 2")
+        .asInstanceOf(throwable(InvalidExpressionException.class))
         .satisfies(e -> assertThat(e.getPos()).isEqualTo(2));
   }
 
   @Test
   void throwExceptionForInvalidExpression_4() {
     var input = "[foo.bar]";
-    assertThatThrownBy(() -> Parser.parse(input)).asInstanceOf(throwable(InvalidExpressionException.class))
+    assertThatThrownBy(() -> Parser.parse(input)).hasMessage("Unexpected token: 'Period' at 5")
+        .asInstanceOf(throwable(InvalidExpressionException.class))
         .satisfies(e -> assertThat(e.getPos()).isEqualTo(5));
   }
 
   @Test
   void throwExceptionForInvalidExpression_5() {
     var input = ".";
-    assertThatThrownBy(() -> Parser.parse(input)).asInstanceOf(throwable(InvalidExpressionException.class))
+    assertThatThrownBy(() -> Parser.parse(input)).hasMessage("Unexpected end of expression at position at 2")
+        .asInstanceOf(throwable(InvalidExpressionException.class))
         .satisfies(e -> assertThat(e.getPos()).isEqualTo(2));
   }
 }

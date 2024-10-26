@@ -7,7 +7,7 @@ class InvalidExpressionException extends RuntimeException {
   private final int pos;
 
   InvalidExpressionException(String message, int pos) {
-    super(message);
+    super("%s at %d".formatted(message, pos));
     this.pos = pos;
   }
 
@@ -16,10 +16,10 @@ class InvalidExpressionException extends RuntimeException {
   }
 
   static InvalidExpressionException unexpectedEOF(int pos) {
-    return new InvalidExpressionException("Unexpected end of expression at position at %d".formatted(pos), pos);
+    return new InvalidExpressionException("Unexpected end of expression at position", pos);
   }
 
   static InvalidExpressionException unexpectedToken(Token token) {
-    return new InvalidExpressionException("Unexpected token: %s at %d".formatted(token, token.pos()), token.pos());
+    return new InvalidExpressionException("Unexpected token: '%s'".formatted(token.getClass().getSimpleName()), token.pos());
   }
 }

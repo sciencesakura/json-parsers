@@ -80,7 +80,8 @@ class LexerTest {
   void throwExceptionForUnterminatedString() {
     var input = "\"foo";
     var lexer = new Lexer(input);
-    assertThatThrownBy(() -> toList(lexer)).asInstanceOf(throwable(InvalidExpressionException.class))
+    assertThatThrownBy(() -> toList(lexer)).hasMessage("Unexpected end of expression at position at 5")
+        .asInstanceOf(throwable(InvalidExpressionException.class))
         .satisfies(e -> assertThat(e.getPos()).isEqualTo(5));
   }
 

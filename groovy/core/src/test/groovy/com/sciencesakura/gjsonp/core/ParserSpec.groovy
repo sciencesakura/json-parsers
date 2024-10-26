@@ -8,7 +8,7 @@ class ParserSpec extends Specification {
 
   def 'parse null'() {
     given:
-    def tokens = [new Token.Null(0, 0)]
+    def tokens = [new Token.Null(1, 1)]
     def parser = new Parser(tokens.iterator())
 
     when:
@@ -20,7 +20,7 @@ class ParserSpec extends Specification {
 
   def 'parse true'() {
     given:
-    def tokens = [new Token.Bool(0, 0, true)]
+    def tokens = [new Token.Bool(1, 1, true)]
     def parser = new Parser(tokens.iterator())
 
     when:
@@ -32,7 +32,7 @@ class ParserSpec extends Specification {
 
   def 'parse false'() {
     given:
-    def tokens = [new Token.Bool(0, 0, false)]
+    def tokens = [new Token.Bool(1, 1, false)]
     def parser = new Parser(tokens.iterator())
 
     when:
@@ -44,7 +44,7 @@ class ParserSpec extends Specification {
 
   def 'parse string'() {
     given:
-    def tokens = [new Token.String(0, 0, 'Hello')]
+    def tokens = [new Token.String(1, 1, 'Hello')]
     def parser = new Parser(tokens.iterator())
 
     when:
@@ -56,7 +56,7 @@ class ParserSpec extends Specification {
 
   def 'parse number'() {
     given:
-    def tokens = [new Token.Number(0, 0, 42)]
+    def tokens = [new Token.Number(1, 1, 42)]
     def parser = new Parser(tokens.iterator())
 
     when:
@@ -68,7 +68,7 @@ class ParserSpec extends Specification {
 
   def 'parse empty array'() {
     given:
-    def tokens = [new Token.LeftBracket(0, 0), new Token.RightBracket(0, 0)]
+    def tokens = [new Token.LeftBracket(1, 1), new Token.RightBracket(1, 2)]
     def parser = new Parser(tokens.iterator())
 
     when:
@@ -81,9 +81,9 @@ class ParserSpec extends Specification {
   def 'parse array having one element'() {
     given:
     def tokens = [
-        new Token.LeftBracket(0, 0),
-        new Token.Number(0, 0, 42),
-        new Token.RightBracket(0, 0),
+        new Token.LeftBracket(1, 1),
+        new Token.Number(1, 2, 42),
+        new Token.RightBracket(1, 3),
     ]
     def parser = new Parser(tokens.iterator())
 
@@ -97,11 +97,11 @@ class ParserSpec extends Specification {
   def 'parse array having two elements'() {
     given:
     def tokens = [
-        new Token.LeftBracket(0, 0),
-        new Token.String(0, 0, 'Hello'),
-        new Token.Comma(0, 0),
-        new Token.Number(0, 0, 42),
-        new Token.RightBracket(0, 0),
+        new Token.LeftBracket(1, 1),
+        new Token.String(1, 2, 'Hello'),
+        new Token.Comma(1, 3),
+        new Token.Number(1, 4, 42),
+        new Token.RightBracket(1, 5),
     ]
     def parser = new Parser(tokens.iterator())
 
@@ -114,7 +114,7 @@ class ParserSpec extends Specification {
 
   def "throw exception for unclosed array: '['"() {
     given:
-    def tokens = [new Token.LeftBracket(0, 0)]
+    def tokens = [new Token.LeftBracket(1, 1)]
     def parser = new Parser(tokens.iterator())
 
     when:
@@ -122,13 +122,13 @@ class ParserSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_EOF
+    assert e.message == 'Unexpected end of input'
   }
 
   def "throw exception for unclosed array: '[42'"() {
     given:
     // [42
-    def tokens = [new Token.LeftBracket(0, 0), new Token.Number(0, 0, 42)]
+    def tokens = [new Token.LeftBracket(1, 1), new Token.Number(1, 2, 42)]
     def parser = new Parser(tokens.iterator())
 
     when:
@@ -136,15 +136,15 @@ class ParserSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_EOF
+    assert e.message == 'Unexpected end of input'
   }
 
   def "throw exception for unclosed array: '[42,'"() {
     given:
     def tokens = [
-        new Token.LeftBracket(0, 0),
-        new Token.Number(0, 0, 42),
-        new Token.Comma(0, 0),
+        new Token.LeftBracket(1, 1),
+        new Token.Number(1, 2, 42),
+        new Token.Comma(1, 3),
     ]
     def parser = new Parser(tokens.iterator())
 
@@ -153,15 +153,15 @@ class ParserSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_EOF
+    assert e.message == 'Unexpected end of input'
   }
 
   def "throw exception for invalid sequence of tokens: '[,]'"() {
     given:
     def tokens = [
-        new Token.LeftBracket(0, 0),
-        new Token.Comma(0, 0),
-        new Token.RightBracket(0, 0),
+        new Token.LeftBracket(1, 1),
+        new Token.Comma(1, 2),
+        new Token.RightBracket(1, 3),
     ]
     def parser = new Parser(tokens.iterator())
 
@@ -170,18 +170,20 @@ class ParserSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_TOKEN
+    assert e.message == "Unexpected token 'Comma' at 1:2"
+    assert e.line == 1
+    assert e.column == 2
   }
 
   def "throw exception for invalid sequence of tokens: '[42,,]'"() {
     given:
     // [42,,]
     def tokens = [
-        new Token.LeftBracket(0, 0),
-        new Token.Number(0, 0, 42),
-        new Token.Comma(0, 0),
-        new Token.Comma(0, 0),
-        new Token.RightBracket(0, 0),
+        new Token.LeftBracket(1, 1),
+        new Token.Number(1, 2, 42),
+        new Token.Comma(1, 3),
+        new Token.Comma(1, 4),
+        new Token.RightBracket(1, 5),
     ]
     def parser = new Parser(tokens.iterator())
 
@@ -190,17 +192,19 @@ class ParserSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_TOKEN
+    assert e.message == "Unexpected token 'Comma' at 1:4"
+    assert e.line == 1
+    assert e.column == 4
   }
 
   def "throw exception for invalid sequence of tokens: '[42 42]'"() {
     given:
     // [42 42]
     def tokens = [
-        new Token.LeftBracket(0, 0),
-        new Token.Number(0, 0, 42),
-        new Token.Number(0, 0, 42),
-        new Token.RightBracket(0, 0),
+        new Token.LeftBracket(1, 1),
+        new Token.Number(1, 2, 42),
+        new Token.Number(1, 3, 42),
+        new Token.RightBracket(1, 4),
     ]
     def parser = new Parser(tokens.iterator())
 
@@ -209,12 +213,14 @@ class ParserSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_TOKEN
+    assert e.message == "Unexpected token 'Number' at 1:3"
+    assert e.line == 1
+    assert e.column == 3
   }
 
   def 'parse empty object'() {
     given:
-    def tokens = [new Token.LeftCurly(0, 0), new Token.RightCurly(0, 0)]
+    def tokens = [new Token.LeftCurly(1, 1), new Token.RightCurly(1, 2)]
     def parser = new Parser(tokens.iterator())
 
     when:
@@ -227,11 +233,11 @@ class ParserSpec extends Specification {
   def 'parse object having one pair'() {
     given:
     def tokens = [
-        new Token.LeftCurly(0, 0),
-        new Token.String(0, 0, 'foo'),
-        new Token.Colon(0, 0),
-        new Token.Number(0, 0, 42),
-        new Token.RightCurly(0, 0),
+        new Token.LeftCurly(1, 1),
+        new Token.String(1, 2, 'foo'),
+        new Token.Colon(1, 3),
+        new Token.Number(1, 4, 42),
+        new Token.RightCurly(1, 5),
     ]
     def parser = new Parser(tokens.iterator())
 
@@ -245,15 +251,15 @@ class ParserSpec extends Specification {
   def 'parse object having two pairs'() {
     given:
     def tokens = [
-        new Token.LeftCurly(0, 0),
-        new Token.String(0, 0, 'foo'),
-        new Token.Colon(0, 0),
-        new Token.String(0, 0, 'Hello'),
-        new Token.Comma(0, 0),
-        new Token.String(0, 0, 'bar'),
-        new Token.Colon(0, 0),
-        new Token.Number(0, 0, 42),
-        new Token.RightCurly(0, 0),
+        new Token.LeftCurly(1, 1),
+        new Token.String(1, 2, 'foo'),
+        new Token.Colon(1, 3),
+        new Token.String(1, 4, 'Hello'),
+        new Token.Comma(1, 5),
+        new Token.String(1, 6, 'bar'),
+        new Token.Colon(1, 7),
+        new Token.Number(1, 8, 42),
+        new Token.RightCurly(1, 9),
     ]
     def parser = new Parser(tokens.iterator())
 
@@ -266,7 +272,7 @@ class ParserSpec extends Specification {
 
   def "throw exception for unclosed object: '{'"() {
     given:
-    def tokens = [new Token.LeftCurly(0, 0)]
+    def tokens = [new Token.LeftCurly(1, 1)]
     def parser = new Parser(tokens.iterator())
 
     when:
@@ -274,12 +280,12 @@ class ParserSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_EOF
+    assert e.message == 'Unexpected end of input'
   }
 
   def "throw exception for unclosed object: '{\"foo\"'"() {
     given:
-    def tokens = [new Token.LeftCurly(0, 0), new Token.String(0, 0, 'foo')]
+    def tokens = [new Token.LeftCurly(1, 1), new Token.String(1, 2, 'foo')]
     def parser = new Parser(tokens.iterator())
 
     when:
@@ -287,15 +293,15 @@ class ParserSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_EOF
+    assert e.message == 'Unexpected end of input'
   }
 
   def "throw exception for unclosed object: '{\"foo\":'"() {
     given:
     def tokens = [
-        new Token.LeftCurly(0, 0),
-        new Token.String(0, 0, 'foo'),
-        new Token.Colon(0, 0),
+        new Token.LeftCurly(1, 1),
+        new Token.String(1, 2, 'foo'),
+        new Token.Colon(1, 3),
     ]
     def parser = new Parser(tokens.iterator())
 
@@ -304,16 +310,16 @@ class ParserSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_EOF
+    assert e.message == 'Unexpected end of input'
   }
 
   def "throw exception for unclosed object: '{\"foo\": 42'"() {
     given:
     def tokens = [
-        new Token.LeftCurly(0, 0),
-        new Token.String(0, 0, 'foo'),
-        new Token.Colon(0, 0),
-        new Token.Number(0, 0, 42),
+        new Token.LeftCurly(1, 1),
+        new Token.String(1, 2, 'foo'),
+        new Token.Colon(1, 3),
+        new Token.Number(1, 4, 42),
     ]
     def parser = new Parser(tokens.iterator())
 
@@ -322,18 +328,18 @@ class ParserSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_EOF
+    assert e.message == 'Unexpected end of input'
   }
 
   def "throw exception for unclosed object: '{\"foo\": 42,'"() {
     given:
     // {"foo": 42,
     def tokens = [
-        new Token.LeftCurly(0, 0),
-        new Token.String(0, 0, 'foo'),
-        new Token.Colon(0, 0),
-        new Token.Number(0, 0, 42),
-        new Token.Comma(0, 0),
+        new Token.LeftCurly(1, 1),
+        new Token.String(1, 2, 'foo'),
+        new Token.Colon(1, 3),
+        new Token.Number(1, 4, 42),
+        new Token.Comma(1, 5),
     ]
     def parser = new Parser(tokens.iterator())
 
@@ -342,15 +348,15 @@ class ParserSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_EOF
+    assert e.message == 'Unexpected end of input'
   }
 
   def "throw exception for invalid sequence of tokens: '{42}'"() {
     given:
     def tokens = [
-        new Token.LeftCurly(0, 0),
-        new Token.Number(0, 0, 42),
-        new Token.RightCurly(0, 0),
+        new Token.LeftCurly(1, 1),
+        new Token.Number(1, 2, 42),
+        new Token.RightCurly(1, 3),
     ]
     def parser = new Parser(tokens.iterator())
 
@@ -359,17 +365,19 @@ class ParserSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_TOKEN
+    assert e.message == "Unexpected token 'Number' at 1:2"
+    assert e.line == 1
+    assert e.column == 2
   }
 
   def "throw exception for invalid sequence of tokens: '{\"foo\" 42}'"() {
     given:
     // {"foo" 42}
     def tokens = [
-        new Token.LeftCurly(0, 0),
-        new Token.String(0, 0, 'foo'),
-        new Token.Number(0, 0, 42),
-        new Token.RightCurly(0, 0),
+        new Token.LeftCurly(1, 1),
+        new Token.String(1, 2, 'foo'),
+        new Token.Number(1, 3, 42),
+        new Token.RightCurly(1, 4),
     ]
     def parser = new Parser(tokens.iterator())
 
@@ -378,16 +386,18 @@ class ParserSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_TOKEN
+    assert e.message == "Unexpected token 'Number' at 1:3"
+    assert e.line == 1
+    assert e.column == 3
   }
 
   def "throw exception for invalid sequence of tokens: '{\"foo\":}'"() {
     given:
     def tokens = [
-        new Token.LeftCurly(0, 0),
-        new Token.String(0, 0, 'foo'),
-        new Token.Colon(0, 0),
-        new Token.RightCurly(0, 0),
+        new Token.LeftCurly(1, 1),
+        new Token.String(1, 2, 'foo'),
+        new Token.Colon(1, 3),
+        new Token.RightCurly(1, 4),
     ]
     def parser = new Parser(tokens.iterator())
 
@@ -396,18 +406,20 @@ class ParserSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_TOKEN
+    assert e.message == "Unexpected token 'RightCurly' at 1:4"
+    assert e.line == 1
+    assert e.column == 4
   }
 
   def "throw exception for invalid sequence of tokens: '{\"foo\": 42 \"bar\"}'"() {
     given:
     def tokens = [
-        new Token.LeftCurly(0, 0),
-        new Token.String(0, 0, 'foo'),
-        new Token.Colon(0, 0),
-        new Token.Number(0, 0, 42),
-        new Token.String(0, 0, 'bar'),
-        new Token.RightCurly(0, 0),
+        new Token.LeftCurly(1, 1),
+        new Token.String(1, 2, 'foo'),
+        new Token.Colon(1, 3),
+        new Token.Number(1, 4, 42),
+        new Token.String(1, 5, 'bar'),
+        new Token.RightCurly(1, 6),
     ]
     def parser = new Parser(tokens.iterator())
 
@@ -416,18 +428,20 @@ class ParserSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_TOKEN
+    assert e.message == "Unexpected token 'String' at 1:5"
+    assert e.line == 1
+    assert e.column == 5
   }
 
   def "throw exception for invalid sequence of tokens: '{\"foo\": 42,}'"() {
     given:
     def tokens = [
-        new Token.LeftCurly(0, 0),
-        new Token.String(0, 0, 'foo'),
-        new Token.Colon(0, 0),
-        new Token.Number(0, 0, 42),
-        new Token.Comma(0, 0),
-        new Token.RightCurly(0, 0),
+        new Token.LeftCurly(1, 1),
+        new Token.String(1, 2, 'foo'),
+        new Token.Colon(1, 3),
+        new Token.Number(1, 4, 42),
+        new Token.Comma(1, 5),
+        new Token.RightCurly(1, 6),
     ]
     def parser = new Parser(tokens.iterator())
 
@@ -436,6 +450,8 @@ class ParserSpec extends Specification {
 
     then:
     def e = thrown(ParserException)
-    assert e.type == ParserException.Type.UNEXPECTED_TOKEN
+    assert e.message == "Unexpected token 'RightCurly' at 1:6"
+    assert e.line == 1
+    assert e.column == 6
   }
 }

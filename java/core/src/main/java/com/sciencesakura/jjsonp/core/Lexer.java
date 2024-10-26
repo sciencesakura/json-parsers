@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.channels.ReadableByteChannel;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 final class Lexer implements Iterator<Token> {
 
@@ -66,7 +67,7 @@ final class Lexer implements Iterator<Token> {
   @Override
   public Token next() {
     if (!hasNext()) {
-      throw ParserException.unexpectedEOF(line, column);
+      throw new NoSuchElementException();
     }
     var current = this.current;
     this.current = null;

@@ -9,45 +9,46 @@ import groovy.transform.PackageScope
  */
 class ParserException extends RuntimeException {
 
-  final Type type
-
   final long line
 
   final long column
 
-  private ParserException(message, type, line, column) {
-    super(line && column ? "${message} at ${line}:${column}" : message)
-    this.type = type
+  private ParserException(message, line, column) {
+    super("${message} at ${line}:${column}")
     this.line = line
     this.column = column
+  }
+
+  private ParserException(message) {
+    super(message)
+    this.line = 0
+    this.column = 0
   }
 
   @PackageScope
   static ParserException unexpectedCharacter(c, long line, long column) {
     if (c == -1) return unexpectedEOF(line, column)
     def display = Characters.isControl(c) ? 'U+%04X'.formatted((c as char) as int) : c
-    new ParserException("Unexpected character: '$display'", Type.UNEXPECTED_CHARACTER, line, column)
+    new ParserException("Unexpected character '$display'", line, column)
   }
 
   @PackageScope
-  static ParserException unexpectedEOF(long line = 0, long column = 0) {
-    new ParserException('Unexpected end of input', Type.UNEXPECTED_EOF, line, column)
+  static ParserException unexpectedEOF(long line, long column) {
+    new ParserException('Unexpected end of input', line, column)
   }
 
   @PackageScope
-  static ParserException unknownToken(token, long line, long column) {
-    new ParserException("Unknown token '$token'", Type.UNKNOWN_TOKEN, line, column)
+  static ParserException unexpectedEOF() {
+    new ParserException('Unexpected end of input')
+  }
+
+  @PackageScope
+  static ParserException unknownToken(CharSequence token, long line, long column) {
+    new ParserException("Unknown token '$token'", line, column)
   }
 
   @PackageScope
   static ParserException unexpectedToken(Token token) {
-    new ParserException("Unexpected token: $token", Type.UNEXPECTED_TOKEN, token.line(), token.column())
-  }
-
-  enum Type {
-    UNEXPECTED_CHARACTER,
-    UNEXPECTED_EOF,
-    UNEXPECTED_TOKEN,
-    UNKNOWN_TOKEN,
+    new ParserException("Unexpected token '${token.class.simpleName}'", token.line(), token.column())
   }
 }
